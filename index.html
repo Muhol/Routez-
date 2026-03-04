@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Routez App</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<div class="phone">
+
+  <!-- SPLASH SCREEN -->
+  <section id="splash" class="screen active splash-bg">
+    <div class="center">
+      <img src="logo.png" class="logo" />
+      <h1>Routez</h1>
+    </div>
+  </section>
+
+  <!-- SIGN IN / SIGN UP SCREEN -->
+<section id="login" class="screen login-bg">
+  <div class="center">
+
+    <div class="logo-box">
+      <img src="logo.png" class="logo" alt="Routez logo">
+    </div>
+
+    <h2>Welcome to Routez</h2>
+    <p class="sub-text">Sign in to continue</p>
+
+    <button onclick="goTo('home')">Sign in</button>
+    <button class="outline-btn">Sign up</button>
+
+  </div>
+</section>
+
+  <!-- HOME DASHBOARD -->
+  <section id="home" class="screen map-bg">
+    <div class="logo-row">
+      <img src="logo.png" />
+      <span>Routez</span>
+    </div>
+
+    <div class="search-pill" onclick="scrollToSearch()">
+      Where are you going?
+    </div>
+
+    <div class="list">
+      <h4>Your location</h4>
+      <p>Pipeline</p>
+      <h4>Popular routes</h4>
+      <p>Westlands</p>
+    </div>
+
+    <!-- SECOND DASHBOARD (SCROLL) -->
+    <div id="search" class="search-section">
+      <input id="start" placeholder="Starting point" />
+      <input id="end" placeholder="Destination" />
+      <button onclick="goTo('route')">Find Route</button>
+    </div>
+  </section>
+
+  <!-- ROUTE SCREEN -->
+  <section id="route" class="screen">
+    <h3>Route Guidance</h3>
+    <div class="card">Walk to stage – 5 mins</div>
+    <div class="card">Matatu – KES 60 (20 mins)</div>
+    <div class="card">Matatu – KES 80 (15 mins)</div>
+    <button onclick="startTrip()">Start Trip</button>
+  </section>
+
+  <!-- PROFILE -->
+  <section id="profile" class="screen">
+    <h3>Profile</h3>
+    <div class="card">Past Trips</div>
+    <div class="card">Favourite Routes</div>
+    <div class="card">Saved Locations</div>
+  </section>
+
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
+
+
+
