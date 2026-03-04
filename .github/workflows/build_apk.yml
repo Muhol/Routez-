@@ -13,6 +13,10 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
+    defaults:
+      run:
+        working-directory: routez
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -26,7 +30,7 @@ jobs:
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.29.0' # Matches your local version or latest stable
+          flutter-version: '3.29.0'
           channel: 'stable'
 
       - name: Install dependencies
@@ -39,4 +43,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: app-release
-          path: build/app/outputs/flutter-apk/app-release.apk
+          path: routez/build/app/outputs/flutter-apk/app-release.apk
