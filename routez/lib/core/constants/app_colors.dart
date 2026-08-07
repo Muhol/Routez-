@@ -27,4 +27,13 @@ class AppColors {
   // Borders & Dividers
   static const Color dividerLight = Color(0xFFE5E7EB);
   static const Color dividerDark = Color(0xFF374151);
+
+  // Glassmorphic / Liquid Glass Tokens
+  static Color glassBackgroundLight = Colors.white.withValues(alpha: 0.75);
+  static Color glassBorderLight = Colors.white.withValues(alpha: 0.6);
+  static Color glassBackgroundDark = const Color(0xFF1E1E1E).withValues(alpha: 0.75);
+  static Color glassBorderDark = Colors.white.withValues(alpha: 0.15);
+  static Color glassPillLight = const Color(0xFF0B2A4A).withValues(alpha: 0.12);
+  static Color glassPillDark = const Color(0xFF1F8F6B).withValues(alpha: 0.25);
 }
+

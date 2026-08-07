@@ -13,6 +13,7 @@ import '../../features/trip_history/presentation/screens/trip_history_screen.dar
 import '../../features/profile/presentation/screens/profile_screen.dart';
 import '../../features/search/presentation/screens/search_screen.dart';
 import '../../features/route_results/presentation/screens/route_results_screen.dart';
+import '../../features/route_results/presentation/screens/route_detail_screen.dart';
 import '../../features/active_trip/presentation/screens/active_trip_screen.dart';
 import '../../features/settings/presentation/screens/settings_screen.dart';
 import '../../features/notifications/presentation/screens/notifications_screen.dart';
@@ -40,6 +41,13 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: '/route-results',
       builder: (context, state) => const RouteResultsScreen(),
+    ),
+    GoRoute(
+      path: '/route-detail',
+      builder: (context, state) {
+        final extra = state.extra as Map<String, dynamic>?;
+        return RouteDetailScreen(routeData: extra);
+      },
     ),
     GoRoute(
       path: '/active-trip',

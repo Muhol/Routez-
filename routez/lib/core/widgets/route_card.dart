@@ -10,6 +10,9 @@ class RouteCard extends StatelessWidget {
   final int transitDurationMinutes;
   final List<String> steps;
   final VoidCallback onStartTrip;
+  final VoidCallback? onTap;
+  final VoidCallback? onBookmarkTap;
+  final bool isBookmarked;
 
   const RouteCard({
     super.key,
@@ -20,6 +23,9 @@ class RouteCard extends StatelessWidget {
     required this.transitDurationMinutes,
     required this.steps,
     required this.onStartTrip,
+    this.onTap,
+    this.onBookmarkTap,
+    this.isBookmarked = false,
   });
 
   @override
@@ -75,6 +81,14 @@ class RouteCard extends StatelessWidget {
                   ],
                 ),
               ),
+              if (onBookmarkTap != null)
+                IconButton(
+                  icon: Icon(
+                    isBookmarked ? Icons.bookmark : Icons.bookmark_border,
+                    color: isBookmarked ? AppColors.accent : AppColors.textSecondaryLight,
+                  ),
+                  onPressed: onBookmarkTap,
+                ),
             ],
           ),
           subtitle: Padding(
@@ -111,12 +125,24 @@ class RouteCard extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: AppSizes.p16),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: onStartTrip,
-                      child: const Text('Start Trip'),
-                    ),
+                  Row(
+                    children: [
+                      if (onTap != null) ...[
+                        Expanded(
+                          child: OutlinedButton(
+                            onPressed: onTap,
+                            child: const Text('View Details'),
+                          ),
+                        ),
+                        const SizedBox(width: AppSizes.p12),
+                      ],
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: onStartTrip,
+                          child: const Text('Start Trip'),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
