@@ -15,6 +15,7 @@ class AppSizes {
   static const double p48 = 48.0;
   static const double p64 = 64.0;
   static const double p80 = 80.0;
+  static const double p200 = 200.0;
 
   // Border Radii (12-20 scale as requested)
   static const double radiusSmall = 8.0;
