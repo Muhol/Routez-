@@ -8,6 +8,8 @@ class AppColors {
 
   // Light Theme Colors
   static const Color backgroundLight = Color(0xFFF5F7FA);
+  static const Color backgroundHighlight = Color.fromARGB(64, 245, 247, 250);
+
   static const Color surfaceLight = Colors.white;
   static const Color textLight = Color(0xFF111827);
   static const Color textSecondaryLight = Color(0xFF4B5563);

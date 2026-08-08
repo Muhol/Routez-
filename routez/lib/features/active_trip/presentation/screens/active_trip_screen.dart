@@ -1,19 +1,34 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../../../../core/constants/app_sizes.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/constants/map_styles.dart';
 import '../../../../core/widgets/primary_button.dart';
+import '../../../settings/presentation/providers/settings_provider.dart';
 
-class ActiveTripScreen extends StatefulWidget {
+class ActiveTripScreen extends ConsumerStatefulWidget {
   const ActiveTripScreen({super.key});
 
   @override
-  State<ActiveTripScreen> createState() => _ActiveTripScreenState();
+  ConsumerState<ActiveTripScreen> createState() => _ActiveTripScreenState();
 }
 
-class _ActiveTripScreenState extends State<ActiveTripScreen> {
+class _ActiveTripScreenState extends ConsumerState<ActiveTripScreen> {
+  GoogleMapController? _mapController;
   int _currentStepIndex = 0;
   bool _isVoiceEnabled = true;
+
+  static const LatLng _pipelineStage = LatLng(-1.3155, 36.8901);
+  static const LatLng _tajMallStage = LatLng(-1.3180, 36.8935);
+  static const LatLng _kencomStage = LatLng(-1.2864, 36.8252);
+  static const LatLng _westlandsStage = LatLng(-1.2642, 36.8058);
+
+  static const CameraPosition _overviewCameraPosition = CameraPosition(
+    target: LatLng(-1.2900, 36.8480),
+    zoom: 12.5,
+  );
 
   final List<Map<String, dynamic>> _tripSteps = [
     {
@@ -22,6 +37,7 @@ class _ActiveTripScreenState extends State<ActiveTripScreen> {
       'instruction': 'Head North on Outering Road walkway to Pipeline Stage.',
       'icon': Icons.directions_walk,
       'color': AppColors.primary,
+      'location': _pipelineStage,
       'progress': 0.3,
     },
     {
@@ -30,6 +46,7 @@ class _ActiveTripScreenState extends State<ActiveTripScreen> {
       'instruction': 'Board Matatu 23 towards Westlands. Stay alert for your stop.',
       'icon': Icons.directions_bus,
       'color': AppColors.accent,
+      'location': _kencomStage,
       'progress': 0.65,
     },
     {
@@ -38,15 +55,56 @@ class _ActiveTripScreenState extends State<ActiveTripScreen> {
       'instruction': 'Prepare to alight at Westlands Stage near the flyover.',
       'icon': Icons.location_on,
       'color': AppColors.error,
+      'location': _westlandsStage,
       'progress': 0.95,
     },
   ];
+
+  Set<Marker> _getTripMarkers() {
+    return {
+      Marker(
+        markerId: const MarkerId('start_stage'),
+        position: _pipelineStage,
+        infoWindow: const InfoWindow(title: 'Start: Pipeline Stage'),
+        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
+      ),
+      Marker(
+        markerId: const MarkerId('transit_stage'),
+        position: _kencomStage,
+        infoWindow: const InfoWindow(title: 'Transfer: Kencom Stage'),
+        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueAzure),
+      ),
+      Marker(
+        markerId: const MarkerId('end_stage'),
+        position: _westlandsStage,
+        infoWindow: const InfoWindow(title: 'Destination: Westlands Stage'),
+        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
+      ),
+    };
+  }
+
+  Set<Polyline> _getTripPolylines() {
+    return {
+      const Polyline(
+        polylineId: PolylineId('transit_route'),
+        points: [
+          _pipelineStage,
+          _tajMallStage,
+          _kencomStage,
+          _westlandsStage,
+        ],
+        color: AppColors.accent,
+        width: 5,
+      ),
+    };
+  }
 
   void _nextStep() {
     if (_currentStepIndex < _tripSteps.length - 1) {
       setState(() {
         _currentStepIndex++;
       });
+      _animateCameraToCurrentStep();
     } else {
       _showEndTripConfirmation();
     }
@@ -57,7 +115,15 @@ class _ActiveTripScreenState extends State<ActiveTripScreen> {
       setState(() {
         _currentStepIndex--;
       });
+      _animateCameraToCurrentStep();
     }
+  }
+
+  void _animateCameraToCurrentStep() {
+    final stepLocation = _tripSteps[_currentStepIndex]['location'] as LatLng;
+    _mapController?.animateCamera(
+      CameraUpdate.newLatLngZoom(stepLocation, 14.5),
+    );
   }
 
   void _toggleVoiceNavigation() {
@@ -66,12 +132,23 @@ class _ActiveTripScreenState extends State<ActiveTripScreen> {
     });
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(
-          _isVoiceEnabled
-              ? 'Voice navigation enabled'
-              : 'Voice navigation muted',
+        content: Row(
+          children: [
+            Icon(
+              _isVoiceEnabled ? Icons.record_voice_over : Icons.voice_over_off,
+              color: Colors.white,
+              size: 20,
+            ),
+            const SizedBox(width: AppSizes.p8),
+            Text(
+              _isVoiceEnabled
+                  ? 'Voice Assistant Enabled: Turn-by-turn guidance active'
+                  : 'Voice Assistant Muted',
+            ),
+          ],
         ),
-        duration: const Duration(seconds: 1),
+        backgroundColor: _isVoiceEnabled ? AppColors.success : AppColors.textSecondaryLight,
+        duration: const Duration(seconds: 2),
       ),
     );
   }
@@ -85,11 +162,11 @@ class _ActiveTripScreenState extends State<ActiveTripScreen> {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppSizes.radiusLarge),
           ),
-          title: Row(
+          title: const Row(
             children: [
-              const Icon(Icons.notifications_active, color: AppColors.warning),
-              const SizedBox(width: AppSizes.p8),
-              const Text('Proximity Alert'),
+              Icon(Icons.notifications_active, color: AppColors.warning),
+              SizedBox(width: AppSizes.p8),
+              Text('Proximity Alert'),
             ],
           ),
           content: Text(
@@ -153,62 +230,70 @@ class _ActiveTripScreenState extends State<ActiveTripScreen> {
   @override
   Widget build(BuildContext context) {
     final currentStep = _tripSteps[_currentStepIndex];
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final themeMode = ref.watch(themeModeProvider);
+    final platformBrightness = MediaQuery.platformBrightnessOf(context);
+    final isDark = themeMode == ThemeMode.dark ||
+        (themeMode == ThemeMode.system && platformBrightness == Brightness.dark);
 
     return Scaffold(
       body: Stack(
         children: [
-          // Route Polyline Overview Container (Mock Transit Map)
-          Container(
-            color: isDark ? const Color(0xFF0F172A) : const Color(0xFFE2E8F0),
-            width: double.infinity,
-            height: double.infinity,
-            child: Stack(
+          // Live Google Map Widget for Active Trip
+          GoogleMap(
+            initialCameraPosition: _overviewCameraPosition,
+            markers: _getTripMarkers(),
+            polylines: _getTripPolylines(),
+            myLocationEnabled: true,
+            myLocationButtonEnabled: false,
+            zoomControlsEnabled: false,
+            mapType: MapType.normal,
+            onMapCreated: (controller) {
+              _mapController = controller;
+              final style = isDark ? kMapStyleDark : kMapStyleLight;
+              controller.setMapStyle(style);
+            },
+          ),
+
+          // Right Floating Control Overlays (Voice Assistant Toggle & Proximity Alert)
+          Positioned(
+            right: AppSizes.p16,
+            top: 120.0,
+            child: Column(
               children: [
-                // Custom Route Polyline Painter
-                CustomPaint(
-                  size: Size.infinite,
-                  painter: _RoutePolylinePainter(
-                    currentStepProgress: currentStep['progress'] as double,
-                    isDark: isDark,
+                // Prominent Voice Assistant Floating Button
+                FloatingActionButton(
+                  heroTag: 'voice_toggle_fab',
+                  onPressed: _toggleVoiceNavigation,
+                  backgroundColor: _isVoiceEnabled ? AppColors.accent : Theme.of(context).colorScheme.surface,
+                  foregroundColor: _isVoiceEnabled ? Colors.white : AppColors.primary,
+                  tooltip: _isVoiceEnabled ? 'Voice Guidance Active' : 'Muted - Tap to enable voice',
+                  child: Icon(
+                    _isVoiceEnabled ? Icons.record_voice_over : Icons.voice_over_off,
                   ),
                 ),
-
-                // Map Control Overlays (Voice Guidance & Proximity Trigger)
-                Positioned(
-                  right: AppSizes.p16,
-                  top: AppSizes.p80,
-                  child: Column(
-                    children: [
-                      FloatingActionButton.small(
-                        heroTag: 'voice_toggle',
-                        onPressed: _toggleVoiceNavigation,
-                        backgroundColor: Theme.of(context).colorScheme.surface,
-                        foregroundColor: _isVoiceEnabled
-                            ? AppColors.primary
-                            : AppColors.textSecondaryLight,
-                        tooltip: 'Voice Guidance',
-                        child: Icon(
-                          _isVoiceEnabled ? Icons.volume_up : Icons.volume_off,
-                        ),
-                      ),
-                      const SizedBox(height: AppSizes.p12),
-                      FloatingActionButton.small(
-                        heroTag: 'proximity_alert',
-                        onPressed: _showProximityAlert,
-                        backgroundColor: AppColors.warning,
-                        foregroundColor: Colors.white,
-                        tooltip: 'Test Proximity Alert',
-                        child: const Icon(Icons.notifications_active),
-                      ),
-                    ],
-                  ),
+                const SizedBox(height: AppSizes.p12),
+                FloatingActionButton.small(
+                  heroTag: 'proximity_alert_fab',
+                  onPressed: _showProximityAlert,
+                  backgroundColor: AppColors.warning,
+                  foregroundColor: Colors.white,
+                  tooltip: 'Test Proximity Alert',
+                  child: const Icon(Icons.notifications_active),
+                ),
+                const SizedBox(height: AppSizes.p12),
+                FloatingActionButton.small(
+                  heroTag: 'recenter_trip_fab',
+                  onPressed: _animateCameraToCurrentStep,
+                  backgroundColor: Theme.of(context).colorScheme.surface,
+                  foregroundColor: Theme.of(context).colorScheme.primary,
+                  tooltip: 'Center on Active Step',
+                  child: const Icon(Icons.my_location),
                 ),
               ],
             ),
           ),
 
-          // Top Header Overlay
+          // Top Navigation Status Bar Overlay
           SafeArea(
             child: Padding(
               padding: const EdgeInsets.all(AppSizes.p16),
@@ -230,10 +315,8 @@ class _ActiveTripScreenState extends State<ActiveTripScreen> {
                         vertical: AppSizes.p12,
                       ),
                       decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.primary,
-                        borderRadius: BorderRadius.circular(
-                          AppSizes.radiusMedium,
-                        ),
+                        color: AppColors.primary,
+                        borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
                         boxShadow: [
                           BoxShadow(
                             color: Colors.black.withValues(alpha: 0.15),
@@ -247,12 +330,16 @@ class _ActiveTripScreenState extends State<ActiveTripScreen> {
                         children: [
                           Text(
                             'Active Navigation • To Westlands',
-                            style: Theme.of(context).textTheme.bodySmall
+                            style: Theme.of(context)
+                                .textTheme
+                                .bodySmall
                                 ?.copyWith(color: Colors.white70),
                           ),
                           Text(
                             'ETA: 10:45 AM (40 mins)',
-                            style: Theme.of(context).textTheme.titleMedium
+                            style: Theme.of(context)
+                                .textTheme
+                                .titleMedium
                                 ?.copyWith(
                                   color: Colors.white,
                                   fontWeight: FontWeight.bold,
@@ -267,7 +354,7 @@ class _ActiveTripScreenState extends State<ActiveTripScreen> {
             ),
           ),
 
-          // Bottom Step Wizard Navigation Card
+          // Bottom Active Navigation Wizard Card
           Align(
             alignment: Alignment.bottomCenter,
             child: Container(
@@ -334,7 +421,9 @@ class _ActiveTripScreenState extends State<ActiveTripScreen> {
                           children: [
                             Text(
                               currentStep['title'] as String,
-                              style: Theme.of(context).textTheme.titleMedium
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .titleMedium
                                   ?.copyWith(fontWeight: FontWeight.bold),
                             ),
                             Text(
@@ -352,22 +441,70 @@ class _ActiveTripScreenState extends State<ActiveTripScreen> {
                   ),
                   const SizedBox(height: AppSizes.p12),
 
-                  // Step Guidance Note
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(AppSizes.p12),
-                    decoration: BoxDecoration(
-                      color: AppColors.backgroundLight,
-                      borderRadius: BorderRadius.circular(AppSizes.radiusSmall),
-                      border: Border.all(color: AppColors.dividerLight),
-                    ),
-                    child: Text(
-                      currentStep['instruction'] as String,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w500,
+                  // Step Guidance & Voice Assistant Action Button Bar
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: AppSizes.p12,
+                            vertical: AppSizes.p10,
                           ),
-                    ),
+                          decoration: BoxDecoration(
+                            color: AppColors.backgroundHighlight,
+                            borderRadius: BorderRadius.circular(AppSizes.radiusFull),
+                          ),
+                          child: Text(
+                            currentStep['instruction'] as String,
+                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: AppSizes.p8),
+                      // Dedicated Voice Assistance Button Chip
+                      InkWell(
+                        onTap: _toggleVoiceNavigation,
+                        borderRadius: BorderRadius.circular(AppSizes.radiusFull),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: AppSizes.p12,
+                            vertical: AppSizes.p10,
+                          ),
+                          decoration: BoxDecoration(
+                            color: _isVoiceEnabled
+                                ? AppColors.accent.withValues(alpha: 0.15)
+                                : AppColors.dividerLight.withValues(alpha: 0.5),
+                            borderRadius: BorderRadius.circular(AppSizes.radiusFull),
+                            border: Border.all(
+                              color: _isVoiceEnabled ? AppColors.accent : AppColors.textSecondaryLight,
+                              width: 1,
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                _isVoiceEnabled ? Icons.volume_up : Icons.volume_off,
+                                size: 16,
+                                color: _isVoiceEnabled ? AppColors.accent : AppColors.textSecondaryLight,
+                              ),
+                              const SizedBox(width: AppSizes.p4),
+                              Text(
+                                _isVoiceEnabled ? 'Voice ON' : 'Muted',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.bold,
+                                  color: _isVoiceEnabled ? AppColors.accent : AppColors.textSecondaryLight,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: AppSizes.p16),
 
@@ -415,93 +552,5 @@ class _ActiveTripScreenState extends State<ActiveTripScreen> {
         ],
       ),
     );
-  }
-}
-
-// Custom Painter for Route Polyline Overview Container
-class _RoutePolylinePainter extends CustomPainter {
-  final double currentStepProgress;
-  final bool isDark;
-
-  _RoutePolylinePainter({
-    required this.currentStepProgress,
-    required this.isDark,
-  });
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final backgroundPaint = Paint()
-      ..color = isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E1)
-      ..strokeWidth = 6
-      ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.round;
-
-    final activePathPaint = Paint()
-      ..color = AppColors.accent
-      ..strokeWidth = 6
-      ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.round;
-
-    final path = Path();
-    final p1 = Offset(size.width * 0.2, size.height * 0.25);
-    final p2 = Offset(size.width * 0.5, size.height * 0.45);
-    final p3 = Offset(size.width * 0.8, size.height * 0.3);
-
-    path.moveTo(p1.dx, p1.dy);
-    path.lineTo(p2.dx, p2.dy);
-    path.lineTo(p3.dx, p3.dy);
-
-    // Draw base route polyline
-    canvas.drawPath(path, backgroundPaint);
-
-    // Calculate active point on polyline based on progress
-    Offset currentPosition;
-    if (currentStepProgress <= 0.5) {
-      final t = currentStepProgress / 0.5;
-      currentPosition = Offset.lerp(p1, p2, t)!;
-    } else {
-      final t = (currentStepProgress - 0.5) / 0.5;
-      currentPosition = Offset.lerp(p2, p3, t)!;
-    }
-
-    // Draw active path segment up to currentPosition
-    final activePath = Path();
-    activePath.moveTo(p1.dx, p1.dy);
-    if (currentStepProgress <= 0.5) {
-      activePath.lineTo(currentPosition.dx, currentPosition.dy);
-    } else {
-      activePath.lineTo(p2.dx, p2.dy);
-      activePath.lineTo(currentPosition.dx, currentPosition.dy);
-    }
-    canvas.drawPath(activePath, activePathPaint);
-
-    // Draw Stop Markers (Pipeline Stage, Boarding Stage, Alight Stage)
-    _drawMarker(canvas, p1, 'Pipeline Stage', isDark);
-    _drawMarker(canvas, p2, 'Transfer / Board 23', isDark);
-    _drawMarker(canvas, p3, 'Westlands Stage', isDark);
-
-    // Draw Active Navigation Position Pulse
-    final pulsePaint = Paint()
-      ..color = AppColors.primary.withValues(alpha: 0.3)
-      ..style = PaintingStyle.fill;
-    final dotPaint = Paint()
-      ..color = AppColors.primary
-      ..style = PaintingStyle.fill;
-
-    canvas.drawCircle(currentPosition, 16, pulsePaint);
-    canvas.drawCircle(currentPosition, 7, dotPaint);
-  }
-
-  void _drawMarker(Canvas canvas, Offset point, String label, bool isDark) {
-    final markerPaint = Paint()
-      ..color = AppColors.accent
-      ..style = PaintingStyle.fill;
-    canvas.drawCircle(point, 6, markerPaint);
-  }
-
-  @override
-  bool shouldRepaint(covariant _RoutePolylinePainter oldDelegate) {
-    return oldDelegate.currentStepProgress != currentStepProgress ||
-        oldDelegate.isDark != isDark;
   }
 }
