@@ -8,7 +8,7 @@ import GoogleMaps
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
   ) -> Bool {
-    GMSServices.provideAPIKey(ProcessInfo.processInfo.environment["MAPS_API_KEY"] ?? "YOUR_API_KEY_HERE")
+    GMSServices.provideAPIKey(ProcessInfo.processInfo.environment["MAPS_API_KEY"] ?? "AIzaSyAhKpplZPq6oC9GD8jsA4rhVqbGug5cQvA")
     GMSServices.addInternalUsageAttributionID("gmp_git_agentskills_v1")
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }
