@@ -33,7 +33,7 @@ class AppColors {
   // Glassmorphic / Liquid Glass Tokens (Increased translucency for see-through feel)
   static Color glassBackgroundLight = Colors.white.withValues(alpha: 0.50);
   static Color glassBorderLight = const Color.fromARGB(255, 153, 153, 153).withValues(alpha: 0.70);
-  static Color glassBackgroundDark = const Color.fromARGB(255, 0, 0, 0).withValues(alpha: 0.50);
+  static Color glassBackgroundDark = const Color.fromARGB(255, 24, 24, 24).withValues(alpha: 0.50);
   static Color glassBorderDark = const Color.fromARGB(44, 117, 117, 117).withValues(alpha: 0.18);
   static Color glassPillLight = const Color(0xFF0B2A4A).withValues(alpha: 0.12);
   static Color glassPillDark = const Color(0xFF1F8F6B).withValues(alpha: 0.28);
