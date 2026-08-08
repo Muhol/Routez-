@@ -98,7 +98,7 @@ class _TripHistoryScreenState extends State<TripHistoryScreen> {
             top: AppSizes.p24,
             left: AppSizes.p24,
             right: AppSizes.p24,
-            bottom: MediaQuery.of(context).viewInsets.bottom + AppSizes.p24,
+            bottom: AppSizes.p24+80,
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
