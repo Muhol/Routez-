@@ -1,8 +1,7 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../constants/app_colors.dart';
 
-/// Reusable Glassmorphic AppBar with backdrop blur and translucent background.
+/// Reusable AppBar with solid plain background (plain black in dark theme).
 class GlassAppBar extends StatelessWidget implements PreferredSizeWidget {
   final Widget title;
   final List<Widget>? actions;
@@ -25,29 +24,18 @@ class GlassAppBar extends StatelessWidget implements PreferredSizeWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final glassBg = isDark ? AppColors.glassBackgroundDark : AppColors.glassBackgroundLight;
-    final glassBorder = isDark ? AppColors.glassBorderDark : AppColors.glassBorderLight;
+    final headerColor = isDark ? Colors.black : AppColors.backgroundLight;
 
-    return ClipRRect(
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
-        child: Container(
-          decoration: BoxDecoration(
-            color: glassBg,
-            border: Border(
-              bottom: BorderSide(color: glassBorder, width: 1),
-            ),
-          ),
-          child: AppBar(
-            title: title,
-            actions: actions,
-            leading: leading,
-            automaticallyImplyLeading: automaticallyImplyLeading,
-            backgroundColor: Colors.transparent,
-            elevation: 0,
-            scrolledUnderElevation: 0,
-          ),
-        ),
+    return Container(
+      color: headerColor,
+      child: AppBar(
+        title: title,
+        actions: actions,
+        leading: leading,
+        automaticallyImplyLeading: automaticallyImplyLeading,
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        scrolledUnderElevation: 0,
       ),
     );
   }

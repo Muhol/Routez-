@@ -260,7 +260,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(AppSizes.radiusFull),
                   child: BackdropFilter(
-                    filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+                    filter: ImageFilter.blur(sigmaX: 3, sigmaY: 3),
                     child: Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: AppSizes.p20,
@@ -273,7 +273,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         borderRadius: BorderRadius.circular(AppSizes.radiusFull),
                         border: Border.all(
                           color: isDark ? AppColors.glassBorderDark : AppColors.glassBorderLight,
-                          width: 1.5,
+                          width: 1,
                         ),
                         boxShadow: [
                           BoxShadow(
