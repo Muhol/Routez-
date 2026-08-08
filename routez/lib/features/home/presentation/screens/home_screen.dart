@@ -17,8 +17,6 @@ class HomeScreen extends ConsumerStatefulWidget {
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
   GoogleMapController? _mapController;
-  Offset _mapOffset = Offset.zero;
-  String? _selectedStagePin;
 
   static const LatLng _userLocation = LatLng(-1.3148, 36.8912); // Nairobi Pipeline
 
@@ -111,10 +109,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     _mapController?.animateCamera(
       CameraUpdate.newCameraPosition(_initialCameraPosition),
     );
-    setState(() {
-      _mapOffset = Offset.zero;
-      _selectedStagePin = null;
-    });
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Row(

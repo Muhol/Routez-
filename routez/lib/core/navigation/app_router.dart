@@ -6,7 +6,6 @@ import '../../features/onboarding/presentation/screens/onboarding_screen.dart';
 import '../../features/authentication/presentation/screens/welcome_screen.dart';
 import '../../features/authentication/presentation/screens/login_screen.dart';
 import '../../features/authentication/presentation/screens/signup_screen.dart';
-import '../../features/authentication/presentation/screens/forgot_password_screen.dart';
 import '../../features/home/presentation/screens/home_screen.dart';
 import '../../features/saved_routes/presentation/screens/saved_routes_screen.dart';
 import '../../features/saved_routes/presentation/screens/add_saved_location_screen.dart';

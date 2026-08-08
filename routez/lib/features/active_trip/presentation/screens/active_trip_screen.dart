@@ -93,7 +93,7 @@ class _ActiveTripScreenState extends State<ActiveTripScreen> {
             ],
           ),
           content: Text(
-            'Approaching ${_currentStepIndex == 0 ? "Pipeline Stage" : (_currentStepIndex == 1 ? "Westlands Stage" : "Final Destination")}! Prepare for your next action.',
+            'Approaching ${step['title']}! Prepare for your next action.',
             style: const TextStyle(fontSize: 14),
           ),
           actions: [
