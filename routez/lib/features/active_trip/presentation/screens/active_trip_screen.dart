@@ -452,7 +452,7 @@ class _ActiveTripScreenState extends ConsumerState<ActiveTripScreen> {
                           ),
                           decoration: BoxDecoration(
                             color: AppColors.backgroundHighlight,
-                            borderRadius: BorderRadius.circular(AppSizes.radiusFull),
+                            borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
                           ),
                           child: Text(
                             currentStep['instruction'] as String,

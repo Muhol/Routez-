@@ -93,7 +93,7 @@ class _RouteResultsScreenState extends State<RouteResultsScreen> {
               ],
             ),
           ),
-          const Divider(height: 1),
+          // const Divider(height: 1),
           // Route Cards List
           Expanded(
             child: ListView.builder(

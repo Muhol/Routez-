@@ -1,21 +1,79 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../../../../core/constants/app_sizes.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/constants/map_styles.dart';
 import '../../../../core/widgets/primary_button.dart';
+import '../../../settings/presentation/providers/settings_provider.dart';
 
-class RouteDetailScreen extends StatelessWidget {
+class RouteDetailScreen extends ConsumerStatefulWidget {
   final Map<String, dynamic>? routeData;
 
   const RouteDetailScreen({super.key, this.routeData});
 
   @override
+  ConsumerState<RouteDetailScreen> createState() => _RouteDetailScreenState();
+}
+
+class _RouteDetailScreenState extends ConsumerState<RouteDetailScreen> {
+
+  // Representative route waypoints for the preview map
+  static const LatLng _startStage = LatLng(-1.3155, 36.8901);   // Pipeline Stage
+  static const LatLng _midStage = LatLng(-1.3018, 36.8652);     // Mid-route waypoint
+  static const LatLng _kencomStage = LatLng(-1.2864, 36.8252);  // Kencom
+  static const LatLng _westlandsStage = LatLng(-1.2642, 36.8058); // Westlands
+
+  static const CameraPosition _routeOverviewCamera = CameraPosition(
+    target: LatLng(-1.2900, 36.8480),
+    zoom: 12.0,
+  );
+
+  Set<Marker> _getRouteMarkers() {
+    return {
+      const Marker(
+        markerId: MarkerId('route_start'),
+        position: _startStage,
+        infoWindow: InfoWindow(title: 'Pipeline Stage', snippet: 'Board here'),
+      ),
+      Marker(
+        markerId: const MarkerId('route_end'),
+        position: _westlandsStage,
+        infoWindow: const InfoWindow(title: 'Westlands Stage', snippet: 'Alight here'),
+        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
+      ),
+    };
+  }
+
+  Set<Polyline> _getRoutePolylines() {
+    return {
+      const Polyline(
+        polylineId: PolylineId('route_preview_path'),
+        points: [
+          _startStage,
+          _midStage,
+          _kencomStage,
+          _westlandsStage,
+        ],
+        color: AppColors.accent,
+        width: 5,
+      ),
+    };
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final routeNumber = routeData?['routeNumber'] ?? '23';
-    final estimatedTime = routeData?['estimatedTime'] ?? '45 mins';
-    final fare = routeData?['fare'] ?? 'KES 60';
-    final walkMinutes = routeData?['walkMinutes'] ?? 5;
-    final transitMinutes = routeData?['transitMinutes'] ?? 40;
+    final routeNumber = widget.routeData?['routeNumber'] ?? '23';
+    final estimatedTime = widget.routeData?['estimatedTime'] ?? '45 mins';
+    final fare = widget.routeData?['fare'] ?? 'KES 60';
+    final walkMinutes = widget.routeData?['walkMinutes'] ?? 5;
+    final transitMinutes = widget.routeData?['transitMinutes'] ?? 40;
+
+    final themeMode = ref.watch(themeModeProvider);
+    final platformBrightness = MediaQuery.platformBrightnessOf(context);
+    final isDark = themeMode == ThemeMode.dark ||
+        (themeMode == ThemeMode.system && platformBrightness == Brightness.dark);
 
     return Scaffold(
       appBar: AppBar(
@@ -103,39 +161,93 @@ class RouteDetailScreen extends StatelessWidget {
               ),
               const SizedBox(height: AppSizes.p20),
 
-              // Map Preview Container
-              Container(
-                height: 180,
-                decoration: BoxDecoration(
-                  color: AppColors.backgroundLight,
-                  borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
-                  border: Border.all(color: AppColors.dividerLight),
-                ),
-                child: Stack(
-                  children: [
-                    const Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.map, size: 60, color: AppColors.dividerLight),
-                          SizedBox(height: AppSizes.p8),
-                          Text(
-                            'Route Map Path Preview',
-                            style: TextStyle(color: AppColors.textSecondaryLight),
+              // --- Interactive Map Preview ---
+              ClipRRect(
+                borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
+                child: Container(
+                  height: 210,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
+                    border: Border.all(
+                      color: isDark
+                          ? Colors.white.withValues(alpha: 0.08)
+                          : AppColors.dividerLight,
+                    ),
+                  ),
+                  child: Stack(
+                    children: [
+                      // Google Map
+                      GoogleMap(
+                        initialCameraPosition: _routeOverviewCamera,
+                        markers: _getRouteMarkers(),
+                        polylines: _getRoutePolylines(),
+                        myLocationEnabled: false,
+                        myLocationButtonEnabled: false,
+                        zoomControlsEnabled: false,
+                        zoomGesturesEnabled: false,
+                        scrollGesturesEnabled: false,
+                        rotateGesturesEnabled: false,
+                        tiltGesturesEnabled: false,
+                        mapType: MapType.normal,
+                        style: isDark ? kMapStyleDark : kMapStyleLight,
+                      ),
+                      // Overlay: Route label badge
+                      Positioned(
+                        top: 10,
+                        left: 10,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: AppSizes.p10,
+                            vertical: AppSizes.p4,
                           ),
-                        ],
+                          decoration: BoxDecoration(
+                            color: Theme.of(context).colorScheme.primary,
+                            borderRadius: BorderRadius.circular(AppSizes.radiusFull),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.25),
+                                blurRadius: 6,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(Icons.route, color: Colors.white, size: 14),
+                              const SizedBox(width: 4),
+                              Text(
+                                'Route $routeNumber Preview',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                       ),
-                    ),
-                    Positioned(
-                      right: 12,
-                      bottom: 12,
-                      child: FloatingActionButton.small(
-                        onPressed: () {},
-                        backgroundColor: Theme.of(context).colorScheme.surface,
-                        child: const Icon(Icons.fullscreen),
+                      // Fullscreen button overlay
+                      Positioned(
+                        right: 10,
+                        bottom: 10,
+                        child: Material(
+                          color: Theme.of(context).colorScheme.surface,
+                          borderRadius: BorderRadius.circular(AppSizes.radiusSmall),
+                          elevation: 2,
+                          child: InkWell(
+                            onTap: () => context.push('/active-trip'),
+                            borderRadius: BorderRadius.circular(AppSizes.radiusSmall),
+                            child: const Padding(
+                              padding: EdgeInsets.all(6),
+                              child: Icon(Icons.fullscreen, size: 22),
+                            ),
+                          ),
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
               const SizedBox(height: AppSizes.p24),

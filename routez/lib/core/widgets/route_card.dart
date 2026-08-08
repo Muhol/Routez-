@@ -131,7 +131,7 @@ class RouteCard extends StatelessWidget {
                         Expanded(
                           child: OutlinedButton(
                             onPressed: onTap,
-                            child: const Text('View Details'),
+                            child: const Text('Details'),
                           ),
                         ),
                         const SizedBox(width: AppSizes.p12),
