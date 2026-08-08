@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../../../../core/constants/app_sizes.dart';
 import '../../../../core/constants/app_colors.dart';
 
@@ -11,14 +12,24 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  GoogleMapController? _mapController;
   Offset _mapOffset = Offset.zero;
   String? _selectedStagePin;
+  bool _useGoogleMapWidget = true;
+
+  static const LatLng _userLocation = LatLng(-1.3148, 36.8912); // Nairobi Pipeline
+
+  static const CameraPosition _initialCameraPosition = CameraPosition(
+    target: _userLocation,
+    zoom: 14.5,
+  );
 
   final List<Map<String, dynamic>> _stages = [
     {
       'name': 'Pipeline Stage',
       'distance': '2 mins walk',
       'routes': 'Route 23, 110 Express',
+      'latLng': const LatLng(-1.3155, 36.8901),
       'offset': const Offset(-60, -80),
       'fare': 'KES 60',
     },
@@ -26,6 +37,7 @@ class _HomeScreenState extends State<HomeScreen> {
       'name': 'Taj Mall Stage',
       'distance': '5 mins walk',
       'routes': 'Route 46, 33',
+      'latLng': const LatLng(-1.3180, 36.8935),
       'offset': const Offset(80, -120),
       'fare': 'KES 50',
     },
@@ -33,6 +45,7 @@ class _HomeScreenState extends State<HomeScreen> {
       'name': 'Kencom Stage',
       'distance': '12 mins away',
       'routes': 'Route 100, 102',
+      'latLng': const LatLng(-1.2864, 36.8252),
       'offset': const Offset(-100, 100),
       'fare': 'KES 80',
     },
@@ -40,12 +53,35 @@ class _HomeScreenState extends State<HomeScreen> {
       'name': 'Westlands Stage',
       'distance': '20 mins away',
       'routes': 'Route 23, 105',
+      'latLng': const LatLng(-1.2642, 36.8058),
       'offset': const Offset(120, 80),
       'fare': 'KES 70',
     },
   ];
 
+  Set<Marker> _getGoogleMapMarkers() {
+    return _stages.map((stage) {
+      return Marker(
+        markerId: MarkerId(stage['name']),
+        position: stage['latLng'] as LatLng,
+        infoWindow: InfoWindow(
+          title: stage['name'],
+          snippet: '${stage['routes']} • ${stage['distance']}',
+        ),
+        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueAzure),
+        onTap: () {
+          _showStageDetails(stage);
+        },
+      );
+    }).toSet();
+  }
+
   void _recenterMap() {
+    if (_mapController != null && _useGoogleMapWidget) {
+      _mapController?.animateCamera(
+        CameraUpdate.newCameraPosition(_initialCameraPosition),
+      );
+    }
     setState(() {
       _mapOffset = Offset.zero;
       _selectedStagePin = null;
@@ -172,139 +208,98 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       body: Stack(
         children: [
-          // Interactive Map Container
-          GestureDetector(
-            onPanUpdate: (details) {
-              setState(() {
-                _mapOffset += details.delta;
-              });
-            },
-            child: Container(
-              color: isDark ? const Color(0xFF1E293B) : const Color(0xFFE2E8F0),
-              width: double.infinity,
-              height: double.infinity,
-              child: Stack(
-                children: [
-                  // Map Background Grid Lines (Simulated Transit Roads)
-                  CustomPaint(
-                    size: Size.infinite,
-                    painter: _MapGridPainter(offset: _mapOffset, isDark: isDark),
-                  ),
+          // Google Maps Widget Implementation
+          _useGoogleMapWidget
+              ? GoogleMap(
+                  initialCameraPosition: _initialCameraPosition,
+                  markers: _getGoogleMapMarkers(),
+                  myLocationEnabled: true,
+                  myLocationButtonEnabled: false,
+                  zoomControlsEnabled: false,
+                  mapType: isDark ? MapType.normal : MapType.normal,
+                  onMapCreated: (controller) {
+                    _mapController = controller;
+                  },
+                )
+              : GestureDetector(
+                  onPanUpdate: (details) {
+                    setState(() {
+                      _mapOffset += details.delta;
+                    });
+                  },
+                  child: Container(
+                    color: isDark ? const Color(0xFF1E293B) : const Color(0xFFE2E8F0),
+                    width: double.infinity,
+                    height: double.infinity,
+                    child: Stack(
+                      children: [
+                        CustomPaint(
+                          size: Size.infinite,
+                          painter: _MapGridPainter(offset: _mapOffset, isDark: isDark),
+                        ),
+                        ..._stages.map((stage) {
+                          final baseOffset = stage['offset'] as Offset;
+                          final pinPosition = Offset(
+                            MediaQuery.of(context).size.width / 2 + baseOffset.dx + _mapOffset.dx,
+                            MediaQuery.of(context).size.height / 2 + baseOffset.dy + _mapOffset.dy,
+                          );
 
-                  // Stage Pins
-                  ..._stages.map((stage) {
-                    final baseOffset = stage['offset'] as Offset;
-                    final pinPosition = Offset(
-                      MediaQuery.of(context).size.width / 2 + baseOffset.dx + _mapOffset.dx,
-                      MediaQuery.of(context).size.height / 2 + baseOffset.dy + _mapOffset.dy,
-                    );
+                          final isSelected = _selectedStagePin == stage['name'];
 
-                    final isSelected = _selectedStagePin == stage['name'];
-
-                    return Positioned(
-                      left: pinPosition.dx - 20,
-                      top: pinPosition.dy - 40,
-                      child: GestureDetector(
-                        onTap: () {
-                          setState(() {
-                            _selectedStagePin = stage['name'];
-                          });
-                          _showStageDetails(stage);
-                        },
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            AnimatedContainer(
-                              duration: const Duration(milliseconds: 200),
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: AppSizes.p8,
-                                vertical: AppSizes.p4,
-                              ),
-                              decoration: BoxDecoration(
-                                color: isSelected ? AppColors.accent : AppColors.primary,
-                                borderRadius: BorderRadius.circular(AppSizes.radiusSmall),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withValues(alpha: 0.2),
-                                    blurRadius: 4,
+                          return Positioned(
+                            left: pinPosition.dx - 20,
+                            top: pinPosition.dy - 40,
+                            child: GestureDetector(
+                              onTap: () {
+                                setState(() {
+                                  _selectedStagePin = stage['name'];
+                                });
+                                _showStageDetails(stage);
+                              },
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  AnimatedContainer(
+                                    duration: const Duration(milliseconds: 200),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: AppSizes.p8,
+                                      vertical: AppSizes.p4,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: isSelected ? AppColors.accent : AppColors.primary,
+                                      borderRadius: BorderRadius.circular(AppSizes.radiusSmall),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.black.withValues(alpha: 0.2),
+                                          blurRadius: 4,
+                                        ),
+                                      ],
+                                    ),
+                                    child: Text(
+                                      stage['name'],
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                  Icon(
+                                    Icons.location_on,
+                                    color: isSelected ? AppColors.accent : AppColors.primary,
+                                    size: 32,
                                   ),
                                 ],
                               ),
-                              child: Text(
-                                stage['name'],
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
                             ),
-                            Icon(
-                              Icons.location_on,
-                              color: isSelected ? AppColors.accent : AppColors.primary,
-                              size: 32,
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-                  }),
-
-                  // User Location Pulse Marker (Center)
-                  Center(
-                    child: Transform.translate(
-                      offset: _mapOffset,
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Container(
-                            width: 24,
-                            height: 24,
-                            decoration: BoxDecoration(
-                              color: AppColors.primary.withValues(alpha: 0.25),
-                              shape: BoxShape.circle,
-                              border: Border.all(color: AppColors.primary, width: 2),
-                            ),
-                            child: Center(
-                              child: Container(
-                                width: 10,
-                                height: 10,
-                                decoration: const BoxDecoration(
-                                  color: AppColors.primary,
-                                  shape: BoxShape.circle,
-                                ),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 2),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: AppSizes.p6,
-                              vertical: AppSizes.p2,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.black.withValues(alpha: 0.7),
-                              borderRadius: BorderRadius.circular(AppSizes.radiusSmall),
-                            ),
-                            child: const Text(
-                              'You',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 9,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
+                          );
+                        }),
+                      ],
                     ),
                   ),
-                ],
-              ),
-            ),
-          ),
+                ),
 
-          // Top Search Bar Area (No Quick Actions as requested)
+          // Top Search Bar Area
           SafeArea(
             child: Padding(
               padding: const EdgeInsets.all(AppSizes.p16),
@@ -450,7 +445,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
-// Custom Painter for Interactive Map Grid Roads
+// Custom Painter for Map Grid Fallback
 class _MapGridPainter extends CustomPainter {
   final Offset offset;
   final bool isDark;
@@ -472,7 +467,6 @@ class _MapGridPainter extends CustomPainter {
     final gridX = (offset.dx % 120);
     final gridY = (offset.dy % 120);
 
-    // Draw grid roads
     for (double x = -120; x < size.width + 120; x += 120) {
       canvas.drawLine(
         Offset(x + gridX, 0),
