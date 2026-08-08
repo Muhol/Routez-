@@ -9,8 +9,10 @@ import '../../features/authentication/presentation/screens/signup_screen.dart';
 import '../../features/authentication/presentation/screens/forgot_password_screen.dart';
 import '../../features/home/presentation/screens/home_screen.dart';
 import '../../features/saved_routes/presentation/screens/saved_routes_screen.dart';
+import '../../features/saved_routes/presentation/screens/add_saved_location_screen.dart';
 import '../../features/trip_history/presentation/screens/trip_history_screen.dart';
 import '../../features/profile/presentation/screens/profile_screen.dart';
+import '../../features/profile/presentation/screens/edit_profile_screen.dart';
 import '../../features/search/presentation/screens/search_screen.dart';
 import '../../features/route_results/presentation/screens/route_results_screen.dart';
 import '../../features/route_results/presentation/screens/route_detail_screen.dart';
@@ -52,6 +54,14 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: '/active-trip',
       builder: (context, state) => const ActiveTripScreen(),
+    ),
+    GoRoute(
+      path: '/add-saved-location',
+      builder: (context, state) => const AddSavedLocationScreen(),
+    ),
+    GoRoute(
+      path: '/edit-profile',
+      builder: (context, state) => const EditProfileScreen(),
     ),
     GoRoute(
       path: '/settings',

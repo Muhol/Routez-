@@ -48,21 +48,25 @@ This document outlines the step-by-step phased implementation roadmap for the **
 
 ---
 
-## 👤 Phase 4: User Profile, Saved Locations & Trip Management
+## 👤 Phase 4: User Profile, Saved Locations & Trip Management and UI polish 
 > **Focus:** Personalization, saved places, and past trip management.
 
-- [ ] **4.1 Saved Routes & Locations (`lib/features/saved_routes/presentation/screens/saved_routes_screen.dart`)**
+- [x] **4.1 Saved Routes & Locations (`lib/features/saved_routes/presentation/screens/saved_routes_screen.dart`)**
   - Add `+ Add Location` Floating Action Button.
   - Implement Edit and Delete confirmation dialogs for saved route cards.
   - Create **[NEW] Add Saved Location Screen (`lib/features/saved_routes/presentation/screens/add_saved_location_screen.dart`)**.
-- [ ] **4.2 Trip History Enhancements (`lib/features/trip_history/presentation/screens/trip_history_screen.dart`)**
+- [x] **4.2 Trip History Enhancements (`lib/features/trip_history/presentation/screens/trip_history_screen.dart`)**
   - Add *"Repeat Trip"* quick action button on past trip cards.
   - Replace simple alert dialog with a rich **Trip Details Summary Bottom Sheet**.
   - Add search bar / filter for past trips.
-- [ ] **4.3 Create [NEW] Edit Profile Screen (`lib/features/profile/presentation/screens/edit_profile_screen.dart`)**
+- [x] **4.3 Create [NEW] Edit Profile Screen (`lib/features/profile/presentation/screens/edit_profile_screen.dart`)**
   - Avatar image picker/editor, full name, phone number, and preferred transit mode form.
   - Add Logout confirmation modal to `lib/features/profile/presentation/screens/profile_screen.dart`.
-
+- [x] **4.4 UI polish**
+  - Adopt fully rounded search bar in all the screens as well as buttons with icons only
+  - For the dark theme background color should be black instead of slightly visible(deep dark gray) in all screens 
+  - The headers should be glassmorphic too like the bottom navigation bar also the glassmorphism should be more "see through"
+  
 ---
 
 ## ⚙️ Phase 5: Settings, Safety & Support

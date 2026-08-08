@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_sizes.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/widgets/glass_app_bar.dart';
 import '../../../../core/widgets/primary_button.dart';
 
 class SearchScreen extends StatefulWidget {
@@ -17,7 +18,7 @@ class _SearchScreenState extends State<SearchScreen> {
   );
   final TextEditingController _destController = TextEditingController();
 
-  List<String> _recentSearches = [
+  final List<String> _recentSearches = [
     'Westlands, Nairobi',
     'CBD, Kencom Stage',
     'Upperhill, Hospital Road',
@@ -61,7 +62,9 @@ class _SearchScreenState extends State<SearchScreen> {
     }).toList();
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Find Route'), elevation: 0),
+      appBar: const GlassAppBar(
+        title: Text('Find Route'),
+      ),
       body: Column(
         children: [
           // Input Header Section
@@ -101,8 +104,8 @@ class _SearchScreenState extends State<SearchScreen> {
                             decoration: InputDecoration(
                               hintText: 'Starting location',
                               contentPadding: const EdgeInsets.symmetric(
-                                horizontal: AppSizes.p12,
-                                vertical: AppSizes.p8,
+                                horizontal: AppSizes.p16,
+                                vertical: AppSizes.p12,
                               ),
                               suffixIcon: _startController.text.isNotEmpty
                                   ? IconButton(
@@ -124,8 +127,8 @@ class _SearchScreenState extends State<SearchScreen> {
                             decoration: InputDecoration(
                               hintText: 'Destination',
                               contentPadding: const EdgeInsets.symmetric(
-                                horizontal: AppSizes.p12,
-                                vertical: AppSizes.p8,
+                                horizontal: AppSizes.p16,
+                                vertical: AppSizes.p12,
                               ),
                               suffixIcon: _destController.text.isNotEmpty
                                   ? IconButton(
@@ -143,10 +146,16 @@ class _SearchScreenState extends State<SearchScreen> {
                       ),
                     ),
                     const SizedBox(width: AppSizes.p8),
-                    IconButton(
-                      onPressed: _swapLocations,
-                      icon: const Icon(Icons.swap_vert),
-                      tooltip: 'Swap locations',
+                    Container(
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withValues(alpha: 0.1),
+                        shape: BoxShape.circle,
+                      ),
+                      child: IconButton(
+                        onPressed: _swapLocations,
+                        icon: const Icon(Icons.swap_vert, color: AppColors.primary),
+                        tooltip: 'Swap locations',
+                      ),
                     ),
                   ],
                 ),
@@ -161,17 +170,15 @@ class _SearchScreenState extends State<SearchScreen> {
                       ),
                     );
                   },
-                  borderRadius: BorderRadius.circular(AppSizes.radiusSmall),
+                  borderRadius: BorderRadius.circular(AppSizes.radiusFull),
                   child: Container(
                     padding: const EdgeInsets.symmetric(
-                      horizontal: AppSizes.p12,
+                      horizontal: AppSizes.p16,
                       vertical: AppSizes.p10,
                     ),
                     decoration: BoxDecoration(
-                      color: Theme.of(
-                        context,
-                      ).colorScheme.primary.withValues(alpha: 0.06),
-                      borderRadius: BorderRadius.circular(AppSizes.radiusSmall),
+                      color: AppColors.primary.withValues(alpha: 0.08),
+                      borderRadius: BorderRadius.circular(AppSizes.radiusFull),
                     ),
                     child: const Row(
                       mainAxisAlignment: MainAxisAlignment.center,

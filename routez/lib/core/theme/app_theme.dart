@@ -9,7 +9,7 @@ class AppTheme {
     return base.copyWith(
       primaryColor: AppColors.primary,
       scaffoldBackgroundColor: AppColors.backgroundLight,
-      colorScheme: ColorScheme.light(
+      colorScheme: const ColorScheme.light(
         primary: AppColors.primary,
         secondary: AppColors.accent,
         surface: AppColors.surfaceLight,
@@ -45,7 +45,7 @@ class AppTheme {
             horizontal: AppSizes.p24,
           ),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
+            borderRadius: BorderRadius.circular(AppSizes.radiusFull),
           ),
           textStyle: GoogleFonts.inter(
             fontWeight: FontWeight.w600,
@@ -62,7 +62,7 @@ class AppTheme {
             horizontal: AppSizes.p24,
           ),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
+            borderRadius: BorderRadius.circular(AppSizes.radiusFull),
           ),
           textStyle: GoogleFonts.inter(
             fontWeight: FontWeight.w600,
@@ -73,6 +73,9 @@ class AppTheme {
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
           foregroundColor: AppColors.primary,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppSizes.radiusFull),
+          ),
           textStyle: GoogleFonts.inter(
             fontWeight: FontWeight.w600,
             fontSize: 14,
@@ -82,21 +85,24 @@ class AppTheme {
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: AppColors.surfaceLight,
-        contentPadding: const EdgeInsets.all(AppSizes.p16),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: AppSizes.p20,
+          vertical: AppSizes.p16,
+        ),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
+          borderRadius: BorderRadius.circular(AppSizes.radiusFull),
           borderSide: BorderSide.none,
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
+          borderRadius: BorderRadius.circular(AppSizes.radiusFull),
           borderSide: const BorderSide(color: AppColors.dividerLight, width: 1),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
+          borderRadius: BorderRadius.circular(AppSizes.radiusFull),
           borderSide: const BorderSide(color: AppColors.primary, width: 2),
         ),
         errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
+          borderRadius: BorderRadius.circular(AppSizes.radiusFull),
           borderSide: const BorderSide(color: AppColors.error, width: 1),
         ),
         hintStyle: GoogleFonts.inter(color: AppColors.textSecondaryLight),
@@ -107,7 +113,7 @@ class AppTheme {
         shadowColor: Colors.black.withValues(alpha: 0.05),
         margin: EdgeInsets.zero,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
+          borderRadius: BorderRadius.circular(AppSizes.radiusLarge),
         ),
       ),
       bottomSheetTheme: const BottomSheetThemeData(
@@ -138,8 +144,8 @@ class AppTheme {
     final base = ThemeData.dark(useMaterial3: true);
     return base.copyWith(
       primaryColor: AppColors.primary,
-      scaffoldBackgroundColor: AppColors.backgroundDark,
-      colorScheme: ColorScheme.dark(
+      scaffoldBackgroundColor: AppColors.backgroundDark, // Pure Black (0xFF000000)
+      colorScheme: const ColorScheme.dark(
         primary: AppColors.primary,
         secondary: AppColors.accent,
         surface: AppColors.surfaceDark,
@@ -175,7 +181,7 @@ class AppTheme {
             horizontal: AppSizes.p24,
           ),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
+            borderRadius: BorderRadius.circular(AppSizes.radiusFull),
           ),
           textStyle: GoogleFonts.inter(
             fontWeight: FontWeight.w600,
@@ -192,7 +198,7 @@ class AppTheme {
             horizontal: AppSizes.p24,
           ),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
+            borderRadius: BorderRadius.circular(AppSizes.radiusFull),
           ),
           textStyle: GoogleFonts.inter(
             fontWeight: FontWeight.w600,
@@ -203,6 +209,9 @@ class AppTheme {
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
           foregroundColor: AppColors.textDark,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppSizes.radiusFull),
+          ),
           textStyle: GoogleFonts.inter(
             fontWeight: FontWeight.w600,
             fontSize: 14,
@@ -212,21 +221,24 @@ class AppTheme {
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: AppColors.surfaceDark,
-        contentPadding: const EdgeInsets.all(AppSizes.p16),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: AppSizes.p20,
+          vertical: AppSizes.p16,
+        ),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
+          borderRadius: BorderRadius.circular(AppSizes.radiusFull),
           borderSide: BorderSide.none,
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
+          borderRadius: BorderRadius.circular(AppSizes.radiusFull),
           borderSide: const BorderSide(color: AppColors.dividerDark, width: 1),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
+          borderRadius: BorderRadius.circular(AppSizes.radiusFull),
           borderSide: const BorderSide(color: AppColors.primary, width: 2),
         ),
         errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
+          borderRadius: BorderRadius.circular(AppSizes.radiusFull),
           borderSide: const BorderSide(color: AppColors.error, width: 1),
         ),
         hintStyle: GoogleFonts.inter(color: AppColors.textSecondaryDark),
@@ -234,10 +246,10 @@ class AppTheme {
       cardTheme: CardThemeData(
         color: AppColors.surfaceDark,
         elevation: 4,
-        shadowColor: Colors.black.withValues(alpha: 0.3),
+        shadowColor: Colors.black.withValues(alpha: 0.5),
         margin: EdgeInsets.zero,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
+          borderRadius: BorderRadius.circular(AppSizes.radiusLarge),
         ),
       ),
       bottomSheetTheme: const BottomSheetThemeData(
@@ -249,7 +261,7 @@ class AppTheme {
         ),
       ),
       appBarTheme: const AppBarTheme(
-        backgroundColor: AppColors.surfaceDark,
+        backgroundColor: AppColors.backgroundDark, // Pure Black Header
         foregroundColor: AppColors.textDark,
         elevation: 0,
         centerTitle: true,

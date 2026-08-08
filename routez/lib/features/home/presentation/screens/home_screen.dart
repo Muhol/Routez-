@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -256,40 +257,52 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             },
           ),
 
-          // ── Top Search Bar ─────────────────────────────────────────────────
+          // ── Top Search Bar (Fully Rounded & Glassmorphic) ─────────────
           SafeArea(
             child: Padding(
               padding: const EdgeInsets.all(AppSizes.p16),
               child: GestureDetector(
                 onTap: () => context.push('/search'),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppSizes.p16,
-                    vertical: AppSizes.p16,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.surface,
-                    borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.12),
-                        blurRadius: 10,
-                        offset: const Offset(0, 4),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(AppSizes.radiusFull),
+                  child: BackdropFilter(
+                    filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSizes.p20,
+                        vertical: AppSizes.p14,
                       ),
-                    ],
-                  ),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.search, color: AppColors.textSecondaryLight),
-                      const SizedBox(width: AppSizes.p12),
-                      Text(
-                        'Where are you going?',
-                        style: Theme.of(context)
-                            .textTheme
-                            .bodyLarge
-                            ?.copyWith(color: AppColors.textSecondaryLight),
+                      decoration: BoxDecoration(
+                        color: isDark
+                            ? AppColors.glassBackgroundDark
+                            : AppColors.glassBackgroundLight,
+                        borderRadius: BorderRadius.circular(AppSizes.radiusFull),
+                        border: Border.all(
+                          color: isDark ? AppColors.glassBorderDark : AppColors.glassBorderLight,
+                          width: 1.5,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.08),
+                            blurRadius: 16,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
                       ),
-                    ],
+                      child: Row(
+                        children: [
+                          const Icon(Icons.search, color: AppColors.primary),
+                          const SizedBox(width: AppSizes.p12),
+                          Text(
+                            'Where are you going?',
+                            style: Theme.of(context)
+                                .textTheme
+                                .bodyLarge
+                                ?.copyWith(color: AppColors.textSecondaryLight),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                 ),
               ),
