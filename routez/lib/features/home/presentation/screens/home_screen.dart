@@ -131,7 +131,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       ),
       builder: (context) {
         return Padding(
-          padding: const EdgeInsets.all(AppSizes.p24),
+          // padding: const EdgeInsets.all(AppSizes.p24),
+          padding: EdgeInsets.only(top: AppSizes.p24, bottom: AppSizes.p24+80, left: AppSizes.p24, right: AppSizes.p24),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,

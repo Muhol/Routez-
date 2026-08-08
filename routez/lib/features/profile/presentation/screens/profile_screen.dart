@@ -158,10 +158,12 @@ class ProfileScreen extends StatelessWidget {
           ),
 
           const SizedBox(height: AppSizes.p32),
-          PrimaryButton(
-            text: 'Logout',
-            isOutlined: true,
+          ElevatedButton(
             onPressed: () => _showLogoutDialog(context),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+            ),
+            child: const Text('Logout'),
           ),
         ],
       ),
