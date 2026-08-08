@@ -1,21 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../../../../core/constants/app_sizes.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/constants/map_styles.dart';
+import '../../../settings/presentation/providers/settings_provider.dart';
 
-class HomeScreen extends StatefulWidget {
+class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
+  ConsumerState<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends ConsumerState<HomeScreen> {
   GoogleMapController? _mapController;
   Offset _mapOffset = Offset.zero;
   String? _selectedStagePin;
-  bool _useGoogleMapWidget = true;
 
   static const LatLng _userLocation = LatLng(-1.3148, 36.8912); // Nairobi Pipeline
 
@@ -59,6 +61,34 @@ class _HomeScreenState extends State<HomeScreen> {
     },
   ];
 
+  /// Determines if we should use a dark map style given the current theme
+  /// mode setting and platform brightness.
+  bool _resolveIsDark() {
+    final themeMode = ref.read(themeModeProvider);
+    switch (themeMode) {
+      case ThemeMode.dark:
+        return true;
+      case ThemeMode.light:
+        return false;
+      case ThemeMode.system:
+        return MediaQuery.platformBrightnessOf(context) == Brightness.dark;
+    }
+  }
+
+  /// Applies the correct map style to the live controller whenever the
+  /// theme changes (called from `didChangeDependencies` and `onMapCreated`).
+  void _applyMapStyle() {
+    final style = _resolveIsDark() ? kMapStyleDark : kMapStyleLight;
+    _mapController?.setMapStyle(style);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Re-apply the map style when brightness or theme mode changes.
+    _applyMapStyle();
+  }
+
   Set<Marker> _getGoogleMapMarkers() {
     return _stages.map((stage) {
       return Marker(
@@ -77,11 +107,9 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _recenterMap() {
-    if (_mapController != null && _useGoogleMapWidget) {
-      _mapController?.animateCamera(
-        CameraUpdate.newCameraPosition(_initialCameraPosition),
-      );
-    }
+    _mapController?.animateCamera(
+      CameraUpdate.newCameraPosition(_initialCameraPosition),
+    );
     setState(() {
       _mapOffset = Offset.zero;
       _selectedStagePin = null;
@@ -203,103 +231,32 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    // Watch themeModeProvider so the widget rebuilds when user changes the theme.
+    final themeMode = ref.watch(themeModeProvider);
+    final platformBrightness = MediaQuery.platformBrightnessOf(context);
+    final isDark = themeMode == ThemeMode.dark ||
+        (themeMode == ThemeMode.system && platformBrightness == Brightness.dark);
 
     return Scaffold(
       body: Stack(
         children: [
-          // Google Maps Widget Implementation
-          _useGoogleMapWidget
-              ? GoogleMap(
-                  initialCameraPosition: _initialCameraPosition,
-                  markers: _getGoogleMapMarkers(),
-                  myLocationEnabled: true,
-                  myLocationButtonEnabled: false,
-                  zoomControlsEnabled: false,
-                  mapType: isDark ? MapType.normal : MapType.normal,
-                  onMapCreated: (controller) {
-                    _mapController = controller;
-                  },
-                )
-              : GestureDetector(
-                  onPanUpdate: (details) {
-                    setState(() {
-                      _mapOffset += details.delta;
-                    });
-                  },
-                  child: Container(
-                    color: isDark ? const Color(0xFF1E293B) : const Color(0xFFE2E8F0),
-                    width: double.infinity,
-                    height: double.infinity,
-                    child: Stack(
-                      children: [
-                        CustomPaint(
-                          size: Size.infinite,
-                          painter: _MapGridPainter(offset: _mapOffset, isDark: isDark),
-                        ),
-                        ..._stages.map((stage) {
-                          final baseOffset = stage['offset'] as Offset;
-                          final pinPosition = Offset(
-                            MediaQuery.of(context).size.width / 2 + baseOffset.dx + _mapOffset.dx,
-                            MediaQuery.of(context).size.height / 2 + baseOffset.dy + _mapOffset.dy,
-                          );
+          // ── Google Map ──────────────────────────────────────────────────────
+          GoogleMap(
+            initialCameraPosition: _initialCameraPosition,
+            markers: _getGoogleMapMarkers(),
+            myLocationEnabled: true,
+            myLocationButtonEnabled: false,
+            zoomControlsEnabled: false,
+            mapType: MapType.normal,
+            onMapCreated: (controller) {
+              _mapController = controller;
+              // Apply correct style as soon as the map is ready.
+              final style = isDark ? kMapStyleDark : kMapStyleLight;
+              controller.setMapStyle(style);
+            },
+          ),
 
-                          final isSelected = _selectedStagePin == stage['name'];
-
-                          return Positioned(
-                            left: pinPosition.dx - 20,
-                            top: pinPosition.dy - 40,
-                            child: GestureDetector(
-                              onTap: () {
-                                setState(() {
-                                  _selectedStagePin = stage['name'];
-                                });
-                                _showStageDetails(stage);
-                              },
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  AnimatedContainer(
-                                    duration: const Duration(milliseconds: 200),
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: AppSizes.p8,
-                                      vertical: AppSizes.p4,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: isSelected ? AppColors.accent : AppColors.primary,
-                                      borderRadius: BorderRadius.circular(AppSizes.radiusSmall),
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: Colors.black.withValues(alpha: 0.2),
-                                          blurRadius: 4,
-                                        ),
-                                      ],
-                                    ),
-                                    child: Text(
-                                      stage['name'],
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 10,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ),
-                                  Icon(
-                                    Icons.location_on,
-                                    color: isSelected ? AppColors.accent : AppColors.primary,
-                                    size: 32,
-                                  ),
-                                ],
-                              ),
-                            ),
-                          );
-                        }),
-                      ],
-                    ),
-                  ),
-                ),
-
-          // Top Search Bar Area
+          // ── Top Search Bar ─────────────────────────────────────────────────
           SafeArea(
             child: Padding(
               padding: const EdgeInsets.all(AppSizes.p16),
@@ -315,7 +272,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.1),
+                        color: Colors.black.withValues(alpha: 0.12),
                         blurRadius: 10,
                         offset: const Offset(0, 4),
                       ),
@@ -339,10 +296,10 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
 
-          // Floating Action Button (Re-center Location)
+          // ── Floating Re-centre Button ───────────────────────────────────────
           Positioned(
             right: AppSizes.p16,
-            bottom: AppSizes.p200 + 20, // Positioned safely above bottom sheet
+            bottom: AppSizes.p200 + 20,
             child: FloatingActionButton(
               onPressed: _recenterMap,
               backgroundColor: Theme.of(context).colorScheme.surface,
@@ -352,7 +309,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
 
-          // Draggable Bottom Sheet (Interactive Stage Items)
+          // ── Draggable Bottom Sheet ──────────────────────────────────────────
           DraggableScrollableSheet(
             initialChildSize: 0.3,
             minChildSize: 0.15,
@@ -442,60 +399,5 @@ class _HomeScreenState extends State<HomeScreen> {
         ],
       ),
     );
-  }
-}
-
-// Custom Painter for Map Grid Fallback
-class _MapGridPainter extends CustomPainter {
-  final Offset offset;
-  final bool isDark;
-
-  _MapGridPainter({required this.offset, required this.isDark});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final roadPaint = Paint()
-      ..color = isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E1)
-      ..strokeWidth = 14
-      ..style = PaintingStyle.stroke;
-
-    final linePaint = Paint()
-      ..color = isDark ? const Color(0xFF475569) : Colors.white
-      ..strokeWidth = 2
-      ..style = PaintingStyle.stroke;
-
-    final gridX = (offset.dx % 120);
-    final gridY = (offset.dy % 120);
-
-    for (double x = -120; x < size.width + 120; x += 120) {
-      canvas.drawLine(
-        Offset(x + gridX, 0),
-        Offset(x + gridX, size.height),
-        roadPaint,
-      );
-      canvas.drawLine(
-        Offset(x + gridX, 0),
-        Offset(x + gridX, size.height),
-        linePaint,
-      );
-    }
-
-    for (double y = -120; y < size.height + 120; y += 120) {
-      canvas.drawLine(
-        Offset(0, y + gridY),
-        Offset(size.width, y + gridY),
-        roadPaint,
-      );
-      canvas.drawLine(
-        Offset(0, y + gridY),
-        Offset(size.width, y + gridY),
-        linePaint,
-      );
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant _MapGridPainter oldDelegate) {
-    return oldDelegate.offset != offset || oldDelegate.isDark != isDark;
   }
 }
