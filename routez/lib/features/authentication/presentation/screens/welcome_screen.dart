@@ -18,11 +18,7 @@ class WelcomeScreen extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               const Spacer(),
-              Icon(
-                Icons.directions_bus,
-                size: 80,
-                color: Theme.of(context).colorScheme.primary,
-              ),
+              Image.asset('assets/images/logo.png', width: 250),
               const SizedBox(height: AppSizes.p24),
               Text(
                 'Welcome to Routez',

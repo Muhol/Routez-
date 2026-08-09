@@ -18,7 +18,7 @@ class _RouteResultsScreenState extends State<RouteResultsScreen> {
   final List<Map<String, dynamic>> _routes = [
     {
       'id': 'SuperMetro',
-      'routeNumber': '23',
+      'routeNumber': 'Metro',
       'estimatedTime': '45 mins',
       'fare': 'KES 60',
       'fareValue': 60,
@@ -33,7 +33,7 @@ class _RouteResultsScreenState extends State<RouteResultsScreen> {
     },
     {
       'id': 'KBS',
-      'routeNumber': '46',
+      'routeNumber': 'KBS',
       'estimatedTime': '55 mins',
       'fare': 'KES 50',
       'fareValue': 50,
@@ -48,7 +48,7 @@ class _RouteResultsScreenState extends State<RouteResultsScreen> {
     },
     {
       'id': 'KTrans',
-      'routeNumber': '110 Express',
+      'routeNumber': 'KTrans',
       'estimatedTime': '35 mins',
       'fare': 'KES 80',
       'fareValue': 80,
