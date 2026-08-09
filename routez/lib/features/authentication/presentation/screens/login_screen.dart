@@ -4,6 +4,8 @@ import '../../../../core/constants/app_sizes.dart';
 import '../../../../core/widgets/custom_text_field.dart';
 import '../../../../core/widgets/primary_button.dart';
 import '../../../../core/widgets/app_scaffold.dart';
+import '../../../../core/widgets/glass_app_bar.dart';
+
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -19,7 +21,7 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return AppScaffold(
-      appBar: AppBar(title: const Text('Login')),
+      appBar: GlassAppBar(title: const Text('Login')),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(AppSizes.p24),
         child: Form(
