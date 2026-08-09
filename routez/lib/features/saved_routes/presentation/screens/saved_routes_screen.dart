@@ -3,7 +3,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_sizes.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/widgets/empty_state_widget.dart';
-// import '../../../../core/widgets/glass_app_bar.dart';
+import '../../../../core/widgets/glass_app_bar.dart';
 
 class SavedRoutesScreen extends StatefulWidget {
   const SavedRoutesScreen({super.key});
@@ -168,9 +168,9 @@ class _SavedRoutesScreenState extends State<SavedRoutesScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Saved'),
-        elevation: 0,
+      appBar: GlassAppBar(
+        title: Text('Saved Routes'),
+        // elevation: 0,
       ),
       floatingActionButton: Padding(
         padding: const EdgeInsets.only(bottom: 80), // Position above glass bottom nav
