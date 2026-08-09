@@ -297,6 +297,7 @@ class _TripHistoryScreenState extends State<TripHistoryScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text('Trip History'),
+        elevation: 0,
       ),
       body: Column(
         children: [
