@@ -3,7 +3,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_sizes.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/widgets/glass_app_bar.dart';
-import '../../../../core/widgets/primary_button.dart';
+// import '../../../../core/widgets/primary_button.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});

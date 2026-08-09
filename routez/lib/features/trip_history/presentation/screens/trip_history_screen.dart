@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_sizes.dart';
 import '../../../../core/constants/app_colors.dart';
-import '../../../../core/widgets/glass_app_bar.dart';
+// import '../../../../core/widgets/glass_app_bar.dart';
 
 class TripHistoryScreen extends StatefulWidget {
   const TripHistoryScreen({super.key});
@@ -295,7 +295,7 @@ class _TripHistoryScreenState extends State<TripHistoryScreen> {
     }).where((group) => (group['trips'] as List).isNotEmpty).toList();
 
     return Scaffold(
-      appBar: const GlassAppBar(
+      appBar: AppBar(
         title: Text('Trip History'),
       ),
       body: Column(

@@ -17,7 +17,7 @@ class _RouteResultsScreenState extends State<RouteResultsScreen> {
 
   final List<Map<String, dynamic>> _routes = [
     {
-      'id': '23',
+      'id': 'SuperMetro',
       'routeNumber': '23',
       'estimatedTime': '45 mins',
       'fare': 'KES 60',
@@ -32,7 +32,7 @@ class _RouteResultsScreenState extends State<RouteResultsScreen> {
       ],
     },
     {
-      'id': '46',
+      'id': 'KBS',
       'routeNumber': '46',
       'estimatedTime': '55 mins',
       'fare': 'KES 50',
@@ -47,7 +47,7 @@ class _RouteResultsScreenState extends State<RouteResultsScreen> {
       ],
     },
     {
-      'id': '110',
+      'id': 'KTrans',
       'routeNumber': '110 Express',
       'estimatedTime': '35 mins',
       'fare': 'KES 80',
@@ -147,7 +147,7 @@ class _RouteResultsScreenState extends State<RouteResultsScreen> {
 
     return Padding(
       padding: const EdgeInsets.only(right: AppSizes.p8),
-      child: ChoiceChip(
+      child: ChoiceChip.elevated(
         label: Text(label),
         selected: isSelected,
         selectedColor: Theme.of(context).colorScheme.primary,
