@@ -56,8 +56,8 @@ class BottomNavShell extends StatelessWidget {
 
     final glassBg =
         isDark ? AppColors.glassBackgroundDark : AppColors.glassBackgroundLight;
-    // final glassBorder =
-        // isDark ? AppColors.glassBorderDark : AppColors.glassBorderLight;
+    final glassBorder =
+        isDark ? AppColors.glassBorderDark : AppColors.glassBorderLight;
     final activePill =
         isDark ? AppColors.glassPillDark : AppColors.glassPillLight;
     final activeColor = isDark ? AppColors.accent : AppColors.primary;
@@ -85,7 +85,7 @@ class BottomNavShell extends StatelessWidget {
       child: ClipRRect(
         borderRadius: BorderRadius.circular(AppSizes.radiusCircular + 8),
         child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 6, sigmaY: 6),
+          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
           child: Container(
             padding: const EdgeInsets.symmetric(
               horizontal: AppSizes.p8,
@@ -93,8 +93,8 @@ class BottomNavShell extends StatelessWidget {
             ),
             decoration: BoxDecoration(
               color: glassBg,
-              borderRadius: BorderRadius.circular(AppSizes.radiusLarge + 8),
-              // border: Border.all(color: glassBorder, width: 0),
+              borderRadius: BorderRadius.circular(AppSizes.radiusFull),
+              border: Border.all(color: glassBorder, width: 1),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
