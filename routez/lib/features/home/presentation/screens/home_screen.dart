@@ -286,7 +286,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       ),
                       child: Row(
                         children: [
-                          const Icon(Icons.search, color: AppColors.primary),
+                          Icon(Icons.search, color: isDark ? Colors.white : AppColors.primary),
                           const SizedBox(width: AppSizes.p12),
                           Text(
                             'Where are you going?',

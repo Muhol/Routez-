@@ -301,7 +301,7 @@ class _ActiveTripScreenState extends ConsumerState<ActiveTripScreen> {
                 children: [
                   CircleAvatar(
                     backgroundColor: Theme.of(context).colorScheme.surface,
-                    child: IconButton(
+                    child: IconButton.filled(
                       icon: const Icon(Icons.close),
                       onPressed: _showEndTripConfirmation,
                       tooltip: 'End Trip',
@@ -492,14 +492,14 @@ class _ActiveTripScreenState extends ConsumerState<ActiveTripScreen> {
                                 color: _isVoiceEnabled ? AppColors.accent : AppColors.textSecondaryLight,
                               ),
                               const SizedBox(width: AppSizes.p4),
-                              Text(
-                                _isVoiceEnabled ? 'Voice ON' : 'Muted',
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.bold,
-                                  color: _isVoiceEnabled ? AppColors.accent : AppColors.textSecondaryLight,
-                                ),
-                              ),
+                              // Text(
+                              //   _isVoiceEnabled ? 'Voice ON' : 'Muted',
+                              //   style: TextStyle(
+                              //     fontSize: 11,
+                              //     fontWeight: FontWeight.bold,
+                              //     color: _isVoiceEnabled ? AppColors.accent : AppColors.textSecondaryLight,
+                              //   ),
+                              // ),
                             ],
                           ),
                         ),

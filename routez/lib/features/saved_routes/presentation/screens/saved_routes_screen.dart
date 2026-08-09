@@ -169,7 +169,7 @@ class _SavedRoutesScreenState extends State<SavedRoutesScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Saved Routes & Places'),
+        title: Text('Saved'),
       ),
       floatingActionButton: Padding(
         padding: const EdgeInsets.only(bottom: 80), // Position above glass bottom nav
