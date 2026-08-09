@@ -9,6 +9,7 @@ class WelcomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return AppScaffold(
       body: SafeArea(
         child: Padding(
@@ -18,14 +19,18 @@ class WelcomeScreen extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               const Spacer(),
-              Image.asset('assets/images/logo.png', width: 250),
-              const SizedBox(height: AppSizes.p24),
-              Text(
-                'Welcome to Routez',
-                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+              Image.asset(
+                isDark ? 'assets/images/logo-dark.png' : 'assets/images/logo.png',
+                width: 250,
               ),
+              const SizedBox(height: AppSizes.p24),
+              // Text(
+              //   'Welcome to Routez',
+              //   style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+              //     fontWeight: FontWeight.bold,
+              //   ),
+              // ),
+              const Spacer(),
               const SizedBox(height: AppSizes.p8),
               Text(
                 'Your ultimate Nairobi transit companion.',
