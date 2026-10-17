@@ -1,18 +1,22 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../../../core/constants/app_sizes.dart';
-import '../../../../core/constants/app_colors.dart';
-import '../../../../core/widgets/glass_app_bar.dart';
-import '../../../../core/widgets/primary_button.dart';
+import 'package:routez/core/constants/app_sizes.dart';
+import 'package:routez/core/constants/app_colors.dart';
+import 'package:routez/core/widgets/glass_app_bar.dart';
+import 'package:routez/core/widgets/primary_button.dart';
+import 'package:routez/features/saved_routes/presentation/providers/saved_locations_provider.dart';
 
-class AddSavedLocationScreen extends StatefulWidget {
+class AddSavedLocationScreen extends ConsumerStatefulWidget {
   const AddSavedLocationScreen({super.key});
 
   @override
-  State<AddSavedLocationScreen> createState() => _AddSavedLocationScreenState();
+  ConsumerState<AddSavedLocationScreen> createState() =>
+      _AddSavedLocationScreenState();
 }
 
-class _AddSavedLocationScreenState extends State<AddSavedLocationScreen> {
+class _AddSavedLocationScreenState
+    extends ConsumerState<AddSavedLocationScreen> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _addressController = TextEditingController();
@@ -31,6 +35,17 @@ class _AddSavedLocationScreenState extends State<AddSavedLocationScreen> {
     Icons.directions_bus_outlined,
   ];
 
+  final Map<IconData, String> _iconNames = {
+    Icons.home_outlined: 'home_outlined',
+    Icons.work_outlined: 'work_outlined',
+    Icons.fitness_center_outlined: 'fitness_center_outlined',
+    Icons.school_outlined: 'school_outlined',
+    Icons.star_outline: 'star_outline',
+    Icons.place_outlined: 'place_outlined',
+    Icons.shopping_bag_outlined: 'shopping_bag_outlined',
+    Icons.directions_bus_outlined: 'directions_bus_outlined',
+  };
+
   final List<Color> _availableColors = [
     AppColors.primary,
     AppColors.accent,
@@ -47,34 +62,55 @@ class _AddSavedLocationScreenState extends State<AddSavedLocationScreen> {
     super.dispose();
   }
 
-  void _saveLocation() {
-    if (_formKey.currentState!.validate()) {
-      final newLocation = {
-        'name': _nameController.text.trim(),
-        'address': _addressController.text.trim(),
-        'icon': _selectedIcon,
-        'color': _selectedColor,
-      };
+  Future<void> _saveLocation() async {
+    if (!_formKey.currentState!.validate()) return;
 
+    final name = _nameController.text.trim();
+    final address = _addressController.text.trim();
+    final iconName = _iconNames[_selectedIcon] ?? 'place_outlined';
+    final colorHex = _selectedColor.toARGB32().toRadixString(16);
+
+    final success = await ref
+        .read(savedLocationsControllerProvider.notifier)
+        .addLocation(
+          name: name,
+          address: address,
+          iconName: iconName,
+          colorHex: colorHex,
+        );
+
+    if (!mounted) return;
+
+    if (success) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Row(
             children: [
-              const Icon(Icons.check_circle_outline, color: Colors.white, size: 20),
+              const Icon(Icons.check_circle_outline,
+                  color: Colors.white, size: 20),
               const SizedBox(width: AppSizes.p8),
-              Text('Location "${newLocation['name']}" saved successfully!'),
+              Text('Location "$name" saved successfully!'),
             ],
           ),
           backgroundColor: AppColors.success,
         ),
       );
-
-      context.pop(newLocation);
+      context.pop();
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Failed to save location to Firestore.'),
+          backgroundColor: Theme.of(context).colorScheme.error,
+        ),
+      );
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final state = ref.watch(savedLocationsControllerProvider);
+    final isLoading = state.isLoading;
+
     return Scaffold(
       appBar: const GlassAppBar(
         title: Text('Add Saved Location'),
@@ -147,7 +183,9 @@ class _AddSavedLocationScreenState extends State<AddSavedLocationScreen> {
                             : Theme.of(context).colorScheme.surface,
                         shape: BoxShape.circle,
                         border: Border.all(
-                          color: isSelected ? _selectedColor : AppColors.dividerLight,
+                          color: isSelected
+                              ? _selectedColor
+                              : AppColors.dividerLight,
                           width: isSelected ? 2 : 1,
                         ),
                       ),
@@ -183,7 +221,8 @@ class _AddSavedLocationScreenState extends State<AddSavedLocationScreen> {
                         color: color,
                         shape: BoxShape.circle,
                         border: Border.all(
-                          color: isSelected ? Colors.white : Colors.transparent,
+                          color:
+                              isSelected ? Colors.white : Colors.transparent,
                           width: 3,
                         ),
                         boxShadow: isSelected
@@ -197,7 +236,8 @@ class _AddSavedLocationScreenState extends State<AddSavedLocationScreen> {
                             : [],
                       ),
                       child: isSelected
-                          ? const Icon(Icons.check, color: Colors.white, size: 20)
+                          ? const Icon(Icons.check,
+                              color: Colors.white, size: 20)
                           : null,
                     ),
                   );
@@ -205,8 +245,9 @@ class _AddSavedLocationScreenState extends State<AddSavedLocationScreen> {
               ),
               const SizedBox(height: AppSizes.p40),
               PrimaryButton(
-                text: 'Save Location',
-                onPressed: _saveLocation,
+                text: isLoading ? 'Saving...' : 'Save Location',
+                isLoading: isLoading,
+                onPressed: isLoading ? null : () => _saveLocation(),
               ),
             ],
           ),

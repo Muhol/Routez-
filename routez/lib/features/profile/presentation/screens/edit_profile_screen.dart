@@ -1,18 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../../../core/constants/app_sizes.dart';
-import '../../../../core/constants/app_colors.dart';
-import '../../../../core/widgets/glass_app_bar.dart';
-import '../../../../core/widgets/primary_button.dart';
+import 'package:routez/core/constants/app_sizes.dart';
+import 'package:routez/core/constants/app_colors.dart';
+import 'package:routez/core/widgets/glass_app_bar.dart';
+import 'package:routez/core/widgets/primary_button.dart';
+import 'package:routez/features/authentication/presentation/providers/auth_provider.dart';
+import 'package:routez/features/authentication/presentation/providers/user_profile_provider.dart';
 
-class EditProfileScreen extends StatefulWidget {
+class EditProfileScreen extends ConsumerStatefulWidget {
   const EditProfileScreen({super.key});
 
   @override
-  State<EditProfileScreen> createState() => _EditProfileScreenState();
+  ConsumerState<EditProfileScreen> createState() => _EditProfileScreenState();
 }
 
-class _EditProfileScreenState extends State<EditProfileScreen> {
+class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _nameController;
   late TextEditingController _emailController;
@@ -21,12 +24,39 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   String _selectedMode = 'Matatu';
   final List<String> _transitModes = ['Matatu', 'Express Bus', 'Walking + Matatu'];
 
+  bool _initialized = false;
+
   @override
   void initState() {
     super.initState();
-    _nameController = TextEditingController(text: 'Jane Doe');
-    _emailController = TextEditingController(text: 'jane.doe@example.com');
-    _phoneController = TextEditingController(text: '+254 712 345 678');
+    _nameController = TextEditingController();
+    _emailController = TextEditingController();
+    _phoneController = TextEditingController();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_initialized) {
+      final profile = ref.watch(userProfileProvider).asData?.value;
+      final authUser = ref.watch(authStateProvider).asData?.value;
+
+      _nameController.text =
+          profile?.displayName ?? authUser?.displayName ?? 'Commuter';
+      _emailController.text = profile?.email ?? authUser?.email ?? '';
+      _phoneController.text = profile?.phoneNumber ?? '';
+
+      final pref = profile?.defaultTransportPreference ?? 'matatu';
+      if (pref == 'express') {
+        _selectedMode = 'Express Bus';
+      } else if (pref == 'walking') {
+        _selectedMode = 'Walking + Matatu';
+      } else {
+        _selectedMode = 'Matatu';
+      }
+
+      _initialized = true;
+    }
   }
 
   @override
@@ -37,8 +67,24 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     super.dispose();
   }
 
-  void _saveProfile() {
-    if (_formKey.currentState!.validate()) {
+  Future<void> _saveProfile() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    String prefKey = 'matatu';
+    if (_selectedMode == 'Express Bus') prefKey = 'express';
+    if (_selectedMode == 'Walking + Matatu') prefKey = 'walking';
+
+    final success = await ref
+        .read(updateUserProfileControllerProvider.notifier)
+        .updateProfile(
+          displayName: _nameController.text.trim(),
+          phoneNumber: _phoneController.text.trim(),
+          defaultTransportPreference: prefKey,
+        );
+
+    if (!mounted) return;
+
+    if (success) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Row(
@@ -52,12 +98,21 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         ),
       );
       context.pop();
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Failed to update profile details.'),
+          backgroundColor: Theme.of(context).colorScheme.error,
+        ),
+      );
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final updateState = ref.watch(updateUserProfileControllerProvider);
+    final isLoading = updateState.isLoading;
 
     return Scaffold(
       appBar: const GlassAppBar(
@@ -141,17 +196,12 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               const SizedBox(height: AppSizes.p16),
               TextFormField(
                 controller: _emailController,
+                enabled: false, // Email managed via Auth
                 keyboardType: TextInputType.emailAddress,
                 decoration: const InputDecoration(
-                  labelText: 'Email Address',
+                  labelText: 'Email Address (Managed via Auth)',
                   prefixIcon: Icon(Icons.email_outlined),
                 ),
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return 'Please enter your email';
-                  }
-                  return null;
-                },
               ),
               const SizedBox(height: AppSizes.p16),
               TextFormField(
@@ -161,12 +211,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   labelText: 'Phone Number',
                   prefixIcon: Icon(Icons.phone_outlined),
                 ),
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return 'Please enter your phone number';
-                  }
-                  return null;
-                },
               ),
               const SizedBox(height: AppSizes.p24),
 
@@ -211,8 +255,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               const SizedBox(height: AppSizes.p40),
 
               PrimaryButton(
-                text: 'Save Changes',
-                onPressed: _saveProfile,
+                text: isLoading ? 'Saving Changes...' : 'Save Changes',
+                isLoading: isLoading,
+                onPressed: isLoading ? null : () => _saveProfile(),
               ),
             ],
           ),

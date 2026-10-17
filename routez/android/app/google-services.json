@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "984441360969",
+    "project_id": "routez-87151",
+    "storage_bucket": "routez-87151.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:984441360969:android:914185c3085782dd4be598",
+        "android_client_info": {
+          "package_name": "com.example.routez"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC64DopEEY98QUUwleMjsbs0vOTxYMqykc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

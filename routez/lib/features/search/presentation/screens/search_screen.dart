@@ -1,37 +1,68 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../../../core/constants/app_sizes.dart';
-import '../../../../core/constants/app_colors.dart';
-import '../../../../core/widgets/glass_app_bar.dart';
-import '../../../../core/widgets/primary_button.dart';
+import 'package:routez/core/constants/app_sizes.dart';
+import 'package:routez/core/constants/app_colors.dart';
+import 'package:routez/core/widgets/glass_app_bar.dart';
+import 'package:routez/core/widgets/primary_button.dart';
+import 'package:routez/core/widgets/empty_state_widget.dart';
+import 'package:routez/core/services/location_service.dart';
+import '../providers/search_provider.dart';
 
-class SearchScreen extends StatefulWidget {
+class SearchScreen extends ConsumerStatefulWidget {
   const SearchScreen({super.key});
 
   @override
-  State<SearchScreen> createState() => _SearchScreenState();
+  ConsumerState<SearchScreen> createState() => _SearchScreenState();
 }
 
-class _SearchScreenState extends State<SearchScreen> {
-  final TextEditingController _startController = TextEditingController(
-    text: 'Current Location',
-  );
+class _SearchScreenState extends ConsumerState<SearchScreen> {
+  final TextEditingController _startController = TextEditingController();
   final TextEditingController _destController = TextEditingController();
 
-  final List<String> _recentSearches = [
-    'Westlands, Nairobi',
-    'CBD, Kencom Stage',
-    'Upperhill, Hospital Road',
-    'Yaya Centre, Kilimani',
-  ];
+  final FocusNode _startFocusNode = FocusNode();
+  final FocusNode _destFocusNode = FocusNode();
 
-  final List<Map<String, String>> _allSuggestions = [
-    {'title': 'Westlands Stage', 'sub': 'Waiyaki Way, Nairobi'},
-    {'title': 'CBD, Kencom', 'sub': 'City Hall Way, Nairobi'},
-    {'title': 'Upperhill', 'sub': 'Hospital Road, Nairobi'},
-    {'title': 'Yaya Centre', 'sub': 'Argwings Kodhek Rd'},
-    {'title': 'Karen Shopping Centre', 'sub': 'Ngong Road, Nairobi'},
-  ];
+  bool _isStartFocused = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCurrentLocation();
+
+    _startFocusNode.addListener(() {
+      if (_startFocusNode.hasFocus) {
+        setState(() => _isStartFocused = true);
+      }
+    });
+
+    _destFocusNode.addListener(() {
+      if (_destFocusNode.hasFocus) {
+        setState(() => _isStartFocused = false);
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _startFocusNode.dispose();
+    _destFocusNode.dispose();
+    _startController.dispose();
+    _destController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadCurrentLocation() async {
+    final pos = await LocationService.getCurrentPosition();
+    if (!mounted) return;
+    setState(() {
+      _startController.text = pos != null
+          ? 'My Current Location'
+          : 'Pipeline Stage (default)';
+    });
+  }
+
+  final List<String> _recentSearches = [];
 
   void _swapLocations() {
     setState(() {
@@ -53,13 +84,26 @@ class _SearchScreenState extends State<SearchScreen> {
     });
   }
 
+  void _performSearch(String origin, String dest) {
+    final searchOrigin = origin.isNotEmpty ? origin : 'Pipeline Stage';
+    final searchDest = dest.isNotEmpty ? dest : 'Westlands Stage';
+    context.push(
+      '/route-results',
+      extra: {
+        'origin': searchOrigin,
+        'destination': searchDest,
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    final query = _destController.text.toLowerCase();
-    final suggestions = _allSuggestions.where((item) {
-      return item['title']!.toLowerCase().contains(query) ||
-          item['sub']!.toLowerCase().contains(query);
-    }).toList();
+    // Get query based on whichever field user is currently editing
+    final activeController = _isStartFocused ? _startController : _destController;
+    final searchQuery = activeController.text.trim();
+
+    final stageAutocompleteAsync = ref.watch(stageAutocompleteProvider(searchQuery));
+    final placesAutocompleteAsync = ref.watch(googlePlacesAutocompleteProvider(searchQuery));
 
     return Scaffold(
       appBar: const GlassAppBar(
@@ -100,6 +144,7 @@ class _SearchScreenState extends State<SearchScreen> {
                         children: [
                           TextField(
                             controller: _startController,
+                            focusNode: _startFocusNode,
                             onChanged: (_) => setState(() {}),
                             decoration: InputDecoration(
                               hintText: 'Starting location',
@@ -122,10 +167,11 @@ class _SearchScreenState extends State<SearchScreen> {
                           const SizedBox(height: AppSizes.p12),
                           TextField(
                             controller: _destController,
+                            focusNode: _destFocusNode,
                             autofocus: true,
                             onChanged: (_) => setState(() {}),
                             decoration: InputDecoration(
-                              hintText: 'Destination',
+                              hintText: 'Search destination or landmark',
                               contentPadding: const EdgeInsets.symmetric(
                                 horizontal: AppSizes.p16,
                                 vertical: AppSizes.p12,
@@ -146,160 +192,195 @@ class _SearchScreenState extends State<SearchScreen> {
                       ),
                     ),
                     const SizedBox(width: AppSizes.p8),
-                    Container(
-                      decoration: BoxDecoration(
-                        color: AppColors.primary.withValues(alpha: 0.1),
-                        shape: BoxShape.circle,
-                      ),
-                      child: IconButton(
-                        onPressed: _swapLocations,
-                        icon: const Icon(Icons.swap_vert, color: AppColors.primary),
-                        tooltip: 'Swap locations',
-                      ),
+                    IconButton(
+                      icon: const Icon(Icons.swap_vert, color: AppColors.primary),
+                      onPressed: _swapLocations,
+                      tooltip: 'Swap locations',
                     ),
                   ],
                 ),
-                const SizedBox(height: AppSizes.p12),
-                // Action tile: Pick on Map
-                InkWell(
-                  onTap: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Pin location on map selected'),
-                        duration: Duration(seconds: 1),
-                      ),
-                    );
-                  },
-                  borderRadius: BorderRadius.circular(AppSizes.radiusFull),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppSizes.p16,
-                      vertical: AppSizes.p10,
-                    ),
-                    decoration: BoxDecoration(
-                      color: AppColors.primary.withValues(alpha: 0.08),
-                      borderRadius: BorderRadius.circular(AppSizes.radiusFull),
-                    ),
-                    child: const Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.map_outlined,
-                          size: 18,
-                          color: AppColors.primary,
-                        ),
-                        SizedBox(width: AppSizes.p8),
-                        Text(
-                          'Choose location on map',
-                          style: TextStyle(
-                            color: AppColors.primary,
-                            fontWeight: FontWeight.w600,
-                            fontSize: 14,
-                          ),
-                        ),
-                      ],
-                    ),
+                const SizedBox(height: AppSizes.p16),
+                PrimaryButton(
+                  text: 'Search Matatu Routes',
+                  onPressed: () => _performSearch(
+                    _startController.text,
+                    _destController.text,
                   ),
                 ),
               ],
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.all(AppSizes.p16),
-            child: PrimaryButton(
-              text: 'Search Routes',
-              onPressed: () {
-                if (_destController.text.isNotEmpty) {
-                  context.push('/route-results');
-                }
-              },
-            ),
-          ),
+
           const Divider(height: 1),
-          // Suggestions or Recent Searches
+
+          // Autocomplete or Recent Searches List
           Expanded(
-            child: _destController.text.isNotEmpty
-                ? ListView.builder(
-                    itemCount: suggestions.length,
-                    itemBuilder: (context, index) {
-                      final item = suggestions[index];
-                      return ListTile(
-                        leading: const Icon(
-                          Icons.location_on_outlined,
-                          color: AppColors.primary,
-                        ),
-                        title: Text(item['title']!),
-                        subtitle: Text(item['sub']!),
-                        trailing: const Icon(Icons.north_west, size: 16),
-                        onTap: () {
-                          _destController.text = item['title']!;
-                          context.push('/route-results');
-                        },
-                      );
-                    },
-                  )
-                : ListView(
+            child: searchQuery.isNotEmpty
+                ? ListView(
+                    padding: const EdgeInsets.symmetric(vertical: AppSizes.p8),
                     children: [
-                      Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: AppSizes.p16,
-                          vertical: AppSizes.p8,
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            const Text(
-                              'Recent Searches',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                color: AppColors.textSecondaryLight,
-                              ),
-                            ),
-                            if (_recentSearches.isNotEmpty)
-                              GestureDetector(
-                                onTap: _clearRecentSearches,
-                                child: const Text(
-                                  'Clear All',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: AppColors.error,
-                                    fontWeight: FontWeight.w600,
-                                  ),
+                      // --- Database Stages Section ---
+                      stageAutocompleteAsync.when(
+                        loading: () => const SizedBox.shrink(),
+                        error: (_, __) => const SizedBox.shrink(),
+                        data: (stages) {
+                          if (stages.isEmpty) return const SizedBox.shrink();
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: AppSizes.p16,
+                                  vertical: AppSizes.p4,
+                                ),
+                                child: Text(
+                                  'Matatu Stages',
+                                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                                        fontWeight: FontWeight.bold,
+                                        color: AppColors.primary,
+                                      ),
                                 ),
                               ),
-                          ],
-                        ),
+                              ...stages.map((stage) {
+                                return ListTile(
+                                  leading: const Icon(Icons.directions_bus, color: AppColors.primary),
+                                  title: Text(stage.name, style: const TextStyle(fontWeight: FontWeight.bold)),
+                                  subtitle: Text(stage.area),
+                                  trailing: const Icon(Icons.north_west, size: 16, color: AppColors.textSecondaryLight),
+                                  onTap: () {
+                                    if (_isStartFocused) {
+                                      _startController.text = stage.name;
+                                    } else {
+                                      _destController.text = stage.name;
+                                    }
+                                    _performSearch(_startController.text, _destController.text);
+                                  },
+                                );
+                              }),
+                              const Divider(),
+                            ],
+                          );
+                        },
                       ),
-                      if (_recentSearches.isEmpty)
-                        const Padding(
-                          padding: EdgeInsets.all(AppSizes.p32),
-                          child: Center(
-                            child: Text(
-                              'No recent searches',
-                              style: TextStyle(
-                                color: AppColors.textSecondaryLight,
+
+                      // --- Google Places Predictions Section ---
+                      placesAutocompleteAsync.when(
+                        loading: () => const Padding(
+                          padding: EdgeInsets.all(AppSizes.p16),
+                          child: Center(child: CircularProgressIndicator()),
+                        ),
+                        error: (err, _) => Padding(
+                          padding: const EdgeInsets.all(AppSizes.p16),
+                          child: Center(child: Text('Places error: $err')),
+                        ),
+                        data: (places) {
+                          if (places.isEmpty) {
+                            return const Padding(
+                              padding: EdgeInsets.all(AppSizes.p24),
+                              child: Center(
+                                child: Text(
+                                  'No places found matching search',
+                                  style: TextStyle(color: AppColors.textSecondaryLight),
+                                ),
                               ),
+                            );
+                          }
+
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: AppSizes.p16,
+                                  vertical: AppSizes.p4,
+                                ),
+                                child: Text(
+                                  'Google Places & Landmarks',
+                                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                                        fontWeight: FontWeight.bold,
+                                        color: AppColors.accent,
+                                      ),
+                                ),
+                              ),
+                              ...places.map((place) {
+                                return ListTile(
+                                  leading: const Icon(Icons.place_outlined, color: AppColors.accent),
+                                  title: Text(
+                                    place.mainText,
+                                    style: const TextStyle(fontWeight: FontWeight.bold),
+                                  ),
+                                  subtitle: Text(
+                                    place.secondaryText.isNotEmpty ? place.secondaryText : place.description,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  trailing: const Icon(Icons.north_west, size: 16, color: AppColors.textSecondaryLight),
+                                  onTap: () {
+                                    if (_isStartFocused) {
+                                      _startController.text = place.mainText;
+                                    } else {
+                                      _destController.text = place.mainText;
+                                    }
+                                    _performSearch(_startController.text, _destController.text);
+                                  },
+                                );
+                              }),
+                            ],
+                          );
+                        },
+                      ),
+                    ],
+                  )
+                : _recentSearches.isEmpty
+                    ? const EmptyStateWidget(
+                        icon: Icons.search_off_outlined,
+                        title: 'No Recent Searches',
+                        message: 'Type a destination, stage, or landmark above to search for matatu routes.',
+                      )
+                    : ListView(
+                        padding: const EdgeInsets.symmetric(vertical: AppSizes.p8),
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: AppSizes.p16,
+                              vertical: AppSizes.p8,
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  'Recent Searches',
+                                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                ),
+                                TextButton(
+                                  onPressed: _clearRecentSearches,
+                                  child: const Text('Clear All'),
+                                ),
+                              ],
                             ),
                           ),
-                        )
-                      else
-                        ...List.generate(_recentSearches.length, (index) {
-                          final item = _recentSearches[index];
-                          return ListTile(
-                            leading: const Icon(Icons.history),
-                            title: Text(item),
-                            trailing: IconButton(
-                              icon: const Icon(Icons.close, size: 16),
-                              onPressed: () => _removeRecentSearch(index),
-                            ),
-                            onTap: () {
-                              _destController.text = item;
-                              context.push('/route-results');
-                            },
-                          );
-                        }),
-                    ],
-                  ),
+                          ...List.generate(_recentSearches.length, (index) {
+                            final item = _recentSearches[index];
+                            return ListTile(
+                              leading: const Icon(
+                                Icons.history,
+                                color: AppColors.textSecondaryLight,
+                              ),
+                              title: Text(item),
+                              trailing: IconButton(
+                                icon: const Icon(Icons.close, size: 16),
+                                onPressed: () => _removeRecentSearch(index),
+                              ),
+                              onTap: () {
+                                _destController.text = item;
+                                _performSearch(_startController.text, item);
+                              },
+                            );
+                          }),
+                        ],
+                      ),
           ),
         ],
       ),

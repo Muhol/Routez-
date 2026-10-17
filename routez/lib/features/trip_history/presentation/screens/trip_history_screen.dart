@@ -1,81 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_sizes.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/widgets/glass_app_bar.dart';
+import '../../../../core/widgets/empty_state_widget.dart';
+import 'package:routez/features/trip_history/data/models/trip_model.dart';
+import 'package:routez/features/trip_history/presentation/providers/trip_history_provider.dart';
 
-class TripHistoryScreen extends StatefulWidget {
+class TripHistoryScreen extends ConsumerStatefulWidget {
   const TripHistoryScreen({super.key});
 
   @override
-  State<TripHistoryScreen> createState() => _TripHistoryScreenState();
+  ConsumerState<TripHistoryScreen> createState() => _TripHistoryScreenState();
 }
 
-class _TripHistoryScreenState extends State<TripHistoryScreen> {
+class _TripHistoryScreenState extends ConsumerState<TripHistoryScreen> {
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
-
-  final List<Map<String, dynamic>> _allTrips = [
-    {
-      'date': 'Today',
-      'trips': [
-        {
-          'id': 'TRIP-101',
-          'destination': 'Westlands Stage',
-          'origin': 'Pipeline Stage',
-          'fare': 'KES 80',
-          'duration': '45 mins',
-          'time': '10:00 AM',
-          'route': 'Route 23 Express',
-          'payment': 'M-Pesa (Ref: QX78291)',
-          'status': 'Completed',
-        },
-      ],
-    },
-    {
-      'date': 'Yesterday',
-      'trips': [
-        {
-          'id': 'TRIP-102',
-          'destination': 'CBD, Kencom Stage',
-          'origin': 'Taj Mall Stage',
-          'fare': 'KES 50',
-          'duration': '30 mins',
-          'time': '08:30 AM',
-          'route': 'Route 33',
-          'payment': 'M-Pesa (Ref: QX78110)',
-          'status': 'Completed',
-        },
-        {
-          'id': 'TRIP-103',
-          'destination': 'Pipeline Stage',
-          'origin': 'Kencom Stage',
-          'fare': 'KES 100',
-          'duration': '55 mins',
-          'time': '05:45 PM',
-          'route': 'Route 110 Express',
-          'payment': 'Cash',
-          'status': 'Completed',
-        },
-      ],
-    },
-    {
-      'date': 'Last Week',
-      'trips': [
-        {
-          'id': 'TRIP-104',
-          'destination': 'Kilimani, Yaya Center',
-          'origin': 'Westlands Stage',
-          'fare': 'KES 70',
-          'duration': '35 mins',
-          'time': '02:15 PM',
-          'route': 'Route 46',
-          'payment': 'M-Pesa (Ref: QX77992)',
-          'status': 'Completed',
-        },
-      ],
-    },
-  ];
 
   @override
   void dispose() {
@@ -83,7 +25,7 @@ class _TripHistoryScreenState extends State<TripHistoryScreen> {
     super.dispose();
   }
 
-  void _showTripDetailsBottomSheet(Map<String, dynamic> trip) {
+  void _showTripDetailsBottomSheet(TripModel trip) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -98,7 +40,7 @@ class _TripHistoryScreenState extends State<TripHistoryScreen> {
             top: AppSizes.p24,
             left: AppSizes.p24,
             right: AppSizes.p24,
-            bottom: AppSizes.p24+80,
+            bottom: AppSizes.p24 + 80,
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -129,7 +71,7 @@ class _TripHistoryScreenState extends State<TripHistoryScreen> {
                                 ),
                           ),
                           Text(
-                            trip['id'],
+                            trip.id.substring(0, trip.id.length > 8 ? 8 : trip.id.length),
                             style: const TextStyle(
                               color: AppColors.textSecondaryLight,
                               fontSize: 12,
@@ -165,7 +107,7 @@ class _TripHistoryScreenState extends State<TripHistoryScreen> {
                         const SizedBox(width: AppSizes.p12),
                         Expanded(
                           child: Text(
-                            'From: ${trip['origin']}',
+                            'From: ${trip.origin}',
                             style: const TextStyle(fontWeight: FontWeight.w600),
                           ),
                         ),
@@ -188,7 +130,7 @@ class _TripHistoryScreenState extends State<TripHistoryScreen> {
                         const SizedBox(width: AppSizes.p12),
                         Expanded(
                           child: Text(
-                            'To: ${trip['destination']}',
+                            'To: ${trip.destination}',
                             style: const TextStyle(fontWeight: FontWeight.w600),
                           ),
                         ),
@@ -203,16 +145,21 @@ class _TripHistoryScreenState extends State<TripHistoryScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  _buildDetailTile(context, 'Route', trip['route'], Icons.alt_route),
-                  _buildDetailTile(context, 'Duration', trip['duration'], Icons.timer_outlined),
+                  _buildDetailTile(context, 'Route', trip.routeName, Icons.alt_route),
+                  _buildDetailTile(context, 'Duration', '${trip.durationMins} mins', Icons.timer_outlined),
                 ],
               ),
               const SizedBox(height: AppSizes.p12),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  _buildDetailTile(context, 'Total Fare', trip['fare'], Icons.payments_outlined),
-                  _buildDetailTile(context, 'Payment', trip['payment'], Icons.account_balance_wallet_outlined),
+                  _buildDetailTile(context, 'Total Fare', 'KES ${trip.fare}', Icons.payments_outlined),
+                  _buildDetailTile(
+                    context,
+                    'Payment',
+                    trip.mpesaRef != null ? '${trip.paymentMethod} (${trip.mpesaRef})' : trip.paymentMethod,
+                    Icons.account_balance_wallet_outlined,
+                  ),
                 ],
               ),
 
@@ -224,7 +171,13 @@ class _TripHistoryScreenState extends State<TripHistoryScreen> {
                 child: ElevatedButton.icon(
                   onPressed: () {
                     Navigator.pop(context);
-                    context.push('/route-results');
+                    context.push(
+                      '/route-results',
+                      extra: {
+                        'origin': trip.origin,
+                        'destination': trip.destination,
+                      },
+                    );
                   },
                   icon: const Icon(Icons.replay),
                   label: const Text('Repeat This Trip'),
@@ -263,8 +216,8 @@ class _TripHistoryScreenState extends State<TripHistoryScreen> {
                 Text(
                   value,
                   style: const TextStyle(
-                    fontSize: 13,
                     fontWeight: FontWeight.bold,
+                    fontSize: 13,
                   ),
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -276,170 +229,197 @@ class _TripHistoryScreenState extends State<TripHistoryScreen> {
     );
   }
 
+  String _formatDateHeader(DateTime date) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final tripDate = DateTime(date.year, date.month, date.day);
+
+    if (tripDate == today) return 'Today';
+    if (tripDate == today.subtract(const Duration(days: 1))) return 'Yesterday';
+    return '${date.day}/${date.month}/${date.year}';
+  }
+
   @override
   Widget build(BuildContext context) {
-    // Filter trips based on search query
-    final filteredGroupedTrips = _allTrips.map((group) {
-      final matchingTrips = (group['trips'] as List<Map<String, dynamic>>).where((trip) {
-        final query = _searchQuery.toLowerCase();
-        final dest = trip['destination'].toString().toLowerCase();
-        final origin = trip['origin'].toString().toLowerCase();
-        final route = trip['route'].toString().toLowerCase();
-        return dest.contains(query) || origin.contains(query) || route.contains(query);
-      }).toList();
-
-      return {
-        'date': group['date'],
-        'trips': matchingTrips,
-      };
-    }).where((group) => (group['trips'] as List).isNotEmpty).toList();
+    final tripsAsync = ref.watch(tripHistoryProvider);
 
     return Scaffold(
       appBar: GlassAppBar(
-        title: Text('Trip History'),
-        // elevation: 0,
+        title: const Text('Trip History'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.delete_outline),
+            tooltip: 'Clear History',
+            onPressed: () {
+              showDialog(
+                context: context,
+                builder: (context) => AlertDialog(
+                  title: const Text('Clear Trip History?'),
+                  content: const Text('This will permanently delete all past trip records.'),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text('Cancel'),
+                    ),
+                    TextButton(
+                      onPressed: () {
+                        Navigator.pop(context);
+                        ref.read(tripHistoryControllerProvider.notifier).clearAllTrips();
+                      },
+                      child: const Text('Clear All', style: TextStyle(color: AppColors.error)),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+        ],
       ),
       body: Column(
         children: [
-          // Search & Filter Bar
+          // Search Input Bar
           Padding(
-            padding: const EdgeInsets.fromLTRB(
-              AppSizes.p16,
-              AppSizes.p16,
-              AppSizes.p16,
-              AppSizes.p8,
-            ),
+            padding: const EdgeInsets.all(AppSizes.p16),
             child: TextField(
               controller: _searchController,
-              onChanged: (value) {
+              onChanged: (val) {
                 setState(() {
-                  _searchQuery = value.trim();
+                  _searchQuery = val.trim().toLowerCase();
                 });
               },
               decoration: InputDecoration(
-                hintText: 'Search past trips, routes, or stages...',
-                prefixIcon: const Icon(Icons.search),
-                suffixIcon: _searchQuery.isNotEmpty
+                hintText: 'Search by destination or route...',
+                prefixIcon: const Icon(Icons.search, color: AppColors.textSecondaryLight),
+                suffixIcon: _searchController.text.isNotEmpty
                     ? IconButton(
-                        icon: const Icon(Icons.clear),
+                        icon: const Icon(Icons.clear, size: 18),
                         onPressed: () {
-                          _searchController.clear();
-                          setState(() => _searchQuery = '');
+                          setState(() {
+                            _searchController.clear();
+                            _searchQuery = '';
+                          });
                         },
                       )
                     : null,
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: AppSizes.p16,
+                  vertical: AppSizes.p12,
+                ),
               ),
             ),
           ),
 
-          // Trip List View
           Expanded(
-            child: filteredGroupedTrips.isEmpty
-                ? Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(Icons.history_toggle_off,
-                            size: 64, color: AppColors.textSecondaryLight),
-                        const SizedBox(height: AppSizes.p16),
-                        Text(
-                          _searchQuery.isEmpty
-                              ? 'No Past Trips'
-                              : 'No trips matching "$_searchQuery"',
-                          style: Theme.of(context).textTheme.titleMedium,
-                        ),
-                      ],
-                    ),
-                  )
-                : ListView.builder(
-                    padding: const EdgeInsets.fromLTRB(
-                      AppSizes.p16,
-                      AppSizes.p8,
-                      AppSizes.p16,
-                      100, // Bottom padding for shell nav
-                    ),
-                    itemCount: filteredGroupedTrips.length,
-                    itemBuilder: (context, index) {
-                      final group = filteredGroupedTrips[index];
-                      final trips = group['trips'] as List<Map<String, dynamic>>;
+            child: tripsAsync.when(
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (err, _) => const EmptyStateWidget(
+                icon: Icons.cloud_off_outlined,
+                title: 'Could Not Load History',
+                message: 'Unable to reach the database. Check your connection and try again.',
+              ),
+              data: (trips) {
+                // Filter by search query
+                final filteredTrips = trips.where((t) {
+                  return t.destination.toLowerCase().contains(_searchQuery) ||
+                      t.origin.toLowerCase().contains(_searchQuery) ||
+                      t.routeName.toLowerCase().contains(_searchQuery) ||
+                      t.routeNumber.toLowerCase().contains(_searchQuery);
+                }).toList();
 
-                      return Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.symmetric(vertical: AppSizes.p8),
-                            child: Text(
-                              group['date'] as String,
-                              style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                                    fontWeight: FontWeight.bold,
+                if (filteredTrips.isEmpty) {
+                  return EmptyStateWidget(
+                    icon: Icons.history_outlined,
+                    title: _searchQuery.isNotEmpty
+                        ? 'No Results'
+                        : 'No Trips Yet',
+                    message: _searchQuery.isNotEmpty
+                        ? 'No trips match "$_searchQuery". Try a different search term.'
+                        : 'Your completed trips will appear here after you finish a journey.',
+                  );
+                }
+
+                // Group trips by date header
+                final Map<String, List<TripModel>> grouped = {};
+                for (final t in filteredTrips) {
+                  final header = _formatDateHeader(t.departedAt);
+                  grouped.putIfAbsent(header, () => []).add(t);
+                }
+
+                final groupKeys = grouped.keys.toList();
+
+                return ListView.builder(
+                  padding: const EdgeInsets.symmetric(horizontal: AppSizes.p16),
+                  itemCount: groupKeys.length,
+                  itemBuilder: (context, groupIdx) {
+                    final groupTitle = groupKeys[groupIdx];
+                    final groupTrips = grouped[groupTitle]!;
+
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: AppSizes.p8),
+                          child: Text(
+                            groupTitle,
+                            style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColors.primary,
+                                ),
+                          ),
+                        ),
+                        ...groupTrips.map((trip) {
+                          final isMpesa = trip.paymentMethod.toLowerCase().contains('mpesa');
+                          final timeStr =
+                              '${trip.departedAt.hour.toString().padLeft(2, '0')}:${trip.departedAt.minute.toString().padLeft(2, '0')}';
+
+                          return Card(
+                            margin: const EdgeInsets.only(bottom: AppSizes.p12),
+                            child: ListTile(
+                              contentPadding: const EdgeInsets.all(AppSizes.p12),
+                              leading: CircleAvatar(
+                                backgroundColor: AppColors.primary.withValues(alpha: 0.1),
+                                child: const Icon(
+                                  Icons.directions_bus,
+                                  color: AppColors.primary,
+                                ),
+                              ),
+                              title: Text(
+                                trip.destination,
+                                style: const TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                              subtitle: Text(
+                                '${trip.origin} • ${trip.routeNumber}\n$timeStr • ${trip.durationMins} mins',
+                                style: const TextStyle(fontSize: 12),
+                              ),
+                              trailing: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                children: [
+                                  Text(
+                                    'KES ${trip.fare}',
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      color: AppColors.success,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Icon(
+                                    isMpesa ? Icons.smartphone : Icons.payments,
+                                    size: 16,
                                     color: AppColors.textSecondaryLight,
                                   ),
-                            ),
-                          ),
-                          ...trips.map((trip) {
-                            return Card(
-                              margin: const EdgeInsets.only(bottom: AppSizes.p12),
-                              child: ListTile(
-                                leading: Container(
-                                  padding: const EdgeInsets.all(AppSizes.p12),
-                                  decoration: BoxDecoration(
-                                    color: Theme.of(context)
-                                        .colorScheme
-                                        .primary
-                                        .withValues(alpha: 0.1),
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: const Icon(Icons.history,
-                                      color: AppColors.primary),
-                                ),
-                                title: Text(
-                                  trip['destination'],
-                                  style: const TextStyle(fontWeight: FontWeight.bold),
-                                ),
-                                subtitle: Text('${trip['time']} • ${trip['duration']} • ${trip['route']}'),
-                                trailing: Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  crossAxisAlignment: CrossAxisAlignment.end,
-                                  children: [
-                                    Text(
-                                      trip['fare'],
-                                      style: const TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        color: AppColors.success,
-                                      ),
-                                    ),
-                                    const SizedBox(height: AppSizes.p4),
-                                    InkWell(
-                                      onTap: () {
-                                        context.push('/route-results');
-                                      },
-                                      child: const Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Icon(Icons.replay,
-                                              size: 12, color: AppColors.primary),
-                                          SizedBox(width: 2),
-                                          Text(
-                                            'Repeat',
-                                            style: TextStyle(
-                                              fontSize: 11,
-                                              color: AppColors.primary,
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                onTap: () => _showTripDetailsBottomSheet(trip),
+                                ],
                               ),
-                            );
-                          }),
-                        ],
-                      );
-                    },
-                  ),
+                              onTap: () => _showTripDetailsBottomSheet(trip),
+                            ),
+                          );
+                        }),
+                      ],
+                    );
+                  },
+                );
+              },
+            ),
           ),
         ],
       ),

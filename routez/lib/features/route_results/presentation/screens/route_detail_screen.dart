@@ -7,6 +7,8 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/map_styles.dart';
 import '../../../../core/widgets/primary_button.dart';
 import '../../../settings/presentation/providers/settings_provider.dart';
+import 'package:routez/features/search/data/models/journey_leg_model.dart';
+import '../../../../core/services/google_directions_service.dart';
 
 class RouteDetailScreen extends ConsumerStatefulWidget {
   final Map<String, dynamic>? routeData;
@@ -18,66 +20,147 @@ class RouteDetailScreen extends ConsumerStatefulWidget {
 }
 
 class _RouteDetailScreenState extends ConsumerState<RouteDetailScreen> {
+  GoogleMapController? _mapController;
+  Set<Marker> _markers = {};
+  Set<Polyline> _polylines = {};
+  bool _isLoadingDirections = false;
 
-  // Representative route waypoints for the preview map
-  static const LatLng _startStage = LatLng(-1.3155, 36.8901);   // Pipeline Stage
-  static const LatLng _midStage = LatLng(-1.3018, 36.8652);     // Mid-route waypoint
-  static const LatLng _kencomStage = LatLng(-1.2864, 36.8252);  // Kencom
-  static const LatLng _westlandsStage = LatLng(-1.2642, 36.8058); // Westlands
-
-  static const CameraPosition _routeOverviewCamera = CameraPosition(
-    target: LatLng(-1.2900, 36.8480),
-    zoom: 12.0,
-  );
-
-  Set<Marker> _getRouteMarkers() {
-    return {
-      const Marker(
-        markerId: MarkerId('route_start'),
-        position: _startStage,
-        infoWindow: InfoWindow(title: 'Pipeline Stage', snippet: 'Board here'),
-      ),
-      Marker(
-        markerId: const MarkerId('route_end'),
-        position: _westlandsStage,
-        infoWindow: const InfoWindow(title: 'Westlands Stage', snippet: 'Alight here'),
-        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
-      ),
-    };
+  @override
+  void initState() {
+    super.initState();
+    _loadDirectionsPreview();
   }
 
-  Set<Polyline> _getRoutePolylines() {
-    return {
-      const Polyline(
-        polylineId: PolylineId('route_preview_path'),
-        points: [
-          _startStage,
-          _midStage,
-          _kencomStage,
-          _westlandsStage,
-        ],
-        color: AppColors.accent,
-        width: 5,
+  Future<void> _loadDirectionsPreview() async {
+    final journey = widget.routeData?['journey'] as JourneyOption?;
+    if (journey == null || journey.legs.isEmpty) return;
+
+    final stages = journey.orderedStages;
+    final markers = <Marker>{};
+
+    for (int i = 0; i < stages.length; i++) {
+      final s = stages[i];
+      final isFirst = i == 0;
+      final isLast = i == stages.length - 1;
+
+      markers.add(
+        Marker(
+          markerId: MarkerId('stage_$i'),
+          position: LatLng(s.latitude, s.longitude),
+          infoWindow: InfoWindow(
+            title: s.name,
+            snippet: isFirst ? 'Origin Stage' : (isLast ? 'Destination' : s.area),
+          ),
+          icon: BitmapDescriptor.defaultMarkerWithHue(
+            isFirst
+                ? BitmapDescriptor.hueGreen
+                : (isLast ? BitmapDescriptor.hueRed : BitmapDescriptor.hueAzure),
+          ),
+        ),
+      );
+    }
+
+    setState(() {
+      _markers = markers;
+      _isLoadingDirections = true;
+    });
+
+    // Fetch Google Directions API preview using origin & destination
+    final originStr = '${stages.first.latitude},${stages.first.longitude}';
+    final destStr = '${stages.last.latitude},${stages.last.longitude}';
+
+    final directions = await GoogleDirectionsService.getDirections(
+      origin: originStr,
+      destination: destStr,
+    );
+
+    if (directions != null && directions.polylinePoints.isNotEmpty) {
+      setState(() {
+        _polylines = {
+          Polyline(
+            polylineId: const PolylineId('journey_preview_polyline'),
+            points: directions.polylinePoints,
+            color: AppColors.accent,
+            width: 5,
+          ),
+        };
+        _isLoadingDirections = false;
+      });
+
+      // Bounds fit
+      if (_mapController != null) {
+        _fitBounds(directions.polylinePoints);
+      }
+    } else {
+      // Fallback stage straight-line connection
+      setState(() {
+        _polylines = {
+          Polyline(
+            polylineId: const PolylineId('stage_line_fallback'),
+            points: stages.map((s) => LatLng(s.latitude, s.longitude)).toList(),
+            color: AppColors.accent,
+            width: 4,
+          ),
+        };
+        _isLoadingDirections = false;
+      });
+    }
+  }
+
+  void _fitBounds(List<LatLng> points) {
+    if (points.isEmpty) return;
+    double minLat = points.first.latitude;
+    double maxLat = points.first.latitude;
+    double minLng = points.first.longitude;
+    double maxLng = points.first.longitude;
+
+    for (final p in points) {
+      if (p.latitude < minLat) minLat = p.latitude;
+      if (p.latitude > maxLat) maxLat = p.latitude;
+      if (p.longitude < minLng) minLng = p.longitude;
+      if (p.longitude > maxLng) maxLng = p.longitude;
+    }
+
+    _mapController?.animateCamera(
+      CameraUpdate.newLatLngBounds(
+        LatLngBounds(
+          southwest: LatLng(minLat, minLng),
+          northeast: LatLng(maxLat, maxLng),
+        ),
+        40.0,
       ),
-    };
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    final routeNumber = widget.routeData?['routeNumber'] ?? '23';
-    final estimatedTime = widget.routeData?['estimatedTime'] ?? '45 mins';
-    final fare = widget.routeData?['fare'] ?? 'KES 60';
-    final walkMinutes = widget.routeData?['walkMinutes'] ?? 5;
-    final transitMinutes = widget.routeData?['transitMinutes'] ?? 40;
+    final journey = widget.routeData?['journey'] as JourneyOption?;
+    final origin = widget.routeData?['origin'] as String? ?? 'Origin';
+    final destination = widget.routeData?['destination'] as String? ?? 'Destination';
 
     final themeMode = ref.watch(themeModeProvider);
     final platformBrightness = MediaQuery.platformBrightnessOf(context);
     final isDark = themeMode == ThemeMode.dark ||
         (themeMode == ThemeMode.system && platformBrightness == Brightness.dark);
 
+    if (journey == null) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Journey Details')),
+        body: const Center(child: Text('No journey data available.')),
+      );
+    }
+
+    final initialCamera = CameraPosition(
+      target: LatLng(
+        journey.orderedStages.first.latitude,
+        journey.orderedStages.first.longitude,
+      ),
+      zoom: 12.0,
+    );
+
     return Scaffold(
       appBar: AppBar(
-        title: Text('Route $routeNumber Details'),
+        title: Text('${journey.matatuCountLabel.toUpperCase()} JOURNEY'),
         elevation: 0,
       ),
       body: Stack(
@@ -112,16 +195,16 @@ class _RouteDetailScreenState extends ConsumerState<RouteDetailScreen> {
                             borderRadius: BorderRadius.circular(AppSizes.radiusSmall),
                           ),
                           child: Text(
-                            'Route $routeNumber',
+                            journey.matatuCountLabel,
                             style: const TextStyle(
                               color: Colors.white,
                               fontWeight: FontWeight.bold,
-                              fontSize: 16,
+                              fontSize: 15,
                             ),
                           ),
                         ),
                         Text(
-                          fare,
+                          'From KES ${journey.totalCheapestFare}',
                           style: const TextStyle(
                             color: Colors.white,
                             fontWeight: FontWeight.bold,
@@ -136,7 +219,7 @@ class _RouteDetailScreenState extends ConsumerState<RouteDetailScreen> {
                         const Icon(Icons.timer_outlined, color: Colors.white70, size: 20),
                         const SizedBox(width: AppSizes.p8),
                         Text(
-                          'Total Time: $estimatedTime',
+                          'Est. Total Time: ~${journey.totalMinutes} mins',
                           style: const TextStyle(
                             color: Colors.white,
                             fontWeight: FontWeight.w600,
@@ -148,11 +231,14 @@ class _RouteDetailScreenState extends ConsumerState<RouteDetailScreen> {
                     const SizedBox(height: AppSizes.p8),
                     Row(
                       children: [
-                        const Icon(Icons.directions_walk, color: Colors.white70, size: 20),
+                        const Icon(Icons.place_outlined, color: Colors.white70, size: 20),
                         const SizedBox(width: AppSizes.p8),
-                        Text(
-                          '$walkMinutes min walk  •  $transitMinutes min Matatu',
-                          style: const TextStyle(color: Colors.white70),
+                        Expanded(
+                          child: Text(
+                            '$origin → $destination',
+                            style: const TextStyle(color: Colors.white70, fontSize: 13),
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ),
                       ],
                     ),
@@ -161,11 +247,11 @@ class _RouteDetailScreenState extends ConsumerState<RouteDetailScreen> {
               ),
               const SizedBox(height: AppSizes.p20),
 
-              // --- Interactive Map Preview ---
+              // Interactive Map Preview
               ClipRRect(
                 borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
                 child: Container(
-                  height: 210,
+                  height: 220,
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
                     border: Border.all(
@@ -176,76 +262,30 @@ class _RouteDetailScreenState extends ConsumerState<RouteDetailScreen> {
                   ),
                   child: Stack(
                     children: [
-                      // Google Map
                       GoogleMap(
-                        initialCameraPosition: _routeOverviewCamera,
-                        markers: _getRouteMarkers(),
-                        polylines: _getRoutePolylines(),
+                        initialCameraPosition: initialCamera,
+                        markers: _markers,
+                        polylines: _polylines,
                         myLocationEnabled: false,
                         myLocationButtonEnabled: false,
                         zoomControlsEnabled: false,
-                        zoomGesturesEnabled: false,
-                        scrollGesturesEnabled: false,
-                        rotateGesturesEnabled: false,
-                        tiltGesturesEnabled: false,
+                        zoomGesturesEnabled: true,
+                        scrollGesturesEnabled: true,
                         mapType: MapType.normal,
                         style: isDark ? kMapStyleDark : kMapStyleLight,
+                        onMapCreated: (controller) {
+                          _mapController = controller;
+                          if (_polylines.isNotEmpty) {
+                            _fitBounds(_polylines.first.points);
+                          }
+                        },
                       ),
-                      // Overlay: Route label badge
-                      Positioned(
-                        top: 10,
-                        left: 10,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: AppSizes.p10,
-                            vertical: AppSizes.p4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Theme.of(context).colorScheme.primary,
-                            borderRadius: BorderRadius.circular(AppSizes.radiusFull),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.25),
-                                blurRadius: 6,
-                                offset: const Offset(0, 2),
-                              ),
-                            ],
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const Icon(Icons.route, color: Colors.white, size: 14),
-                              const SizedBox(width: 4),
-                              Text(
-                                'Route $routeNumber Preview',
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ],
-                          ),
+                      if (_isLoadingDirections)
+                        const Positioned(
+                          top: 10,
+                          right: 10,
+                          child: CircularProgressIndicator(strokeWidth: 2),
                         ),
-                      ),
-                      // Fullscreen button overlay
-                      Positioned(
-                        right: 10,
-                        bottom: 10,
-                        child: Material(
-                          color: Theme.of(context).colorScheme.surface,
-                          borderRadius: BorderRadius.circular(AppSizes.radiusSmall),
-                          elevation: 2,
-                          child: InkWell(
-                            onTap: () => context.push('/active-trip'),
-                            borderRadius: BorderRadius.circular(AppSizes.radiusSmall),
-                            child: const Padding(
-                              padding: EdgeInsets.all(6),
-                              child: Icon(Icons.fullscreen, size: 22),
-                            ),
-                          ),
-                        ),
-                      ),
                     ],
                   ),
                 ),
@@ -261,61 +301,17 @@ class _RouteDetailScreenState extends ConsumerState<RouteDetailScreen> {
               ),
               const SizedBox(height: AppSizes.p16),
 
-              // Segment 1: Walk to Stage
-              _buildTimelineStep(
-                context,
-                icon: Icons.directions_walk,
-                iconColor: AppColors.primary,
-                title: 'Walk to Stage',
-                subtitle: 'Pipeline Stage (5 mins walk)',
-                description: 'Head North towards Outering Road, cross safely at the pedestrian walkway.',
-                isFirst: true,
-              ),
+              // Render Timeline Steps for each leg
+              ...List.generate(journey.legs.length, (index) {
+                final leg = journey.legs[index];
+                final isLast = index == journey.legs.length - 1;
 
-              // Segment 2: Board Matatu
-              _buildTimelineStep(
-                context,
-                icon: Icons.directions_bus,
-                iconColor: AppColors.accent,
-                title: 'Board Matatu $routeNumber',
-                subtitle: 'Pipeline Stage → Westlands Stage ($transitMinutes mins)',
-                description: 'Board Matatu $routeNumber. Expected fare: $fare. Prepare cash or M-Pesa.',
-              ),
-
-              // Segment 3: Alight
-              _buildTimelineStep(
-                context,
-                icon: Icons.location_on,
-                iconColor: AppColors.error,
-                title: 'Alight at Destination Stage',
-                subtitle: 'Westlands Stage',
-                description: 'Alight near Westlands Roundabout. Walk 2 mins to final destination.',
-                isLast: true,
-              ),
-
-              const SizedBox(height: AppSizes.p16),
-
-              // Stage Tips Card
-              Container(
-                padding: const EdgeInsets.all(AppSizes.p16),
-                decoration: BoxDecoration(
-                  color: AppColors.warning.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
-                  border: Border.all(color: AppColors.warning.withValues(alpha: 0.3)),
-                ),
-                child: const Row(
-                  children: [
-                    Icon(Icons.lightbulb_outline, color: AppColors.warning),
-                    SizedBox(width: AppSizes.p12),
-                    Expanded(
-                      child: Text(
-                        'Matatus operate every 3-5 mins from Pipeline Stage. Confirm destination sign on windshield before boarding.',
-                        style: TextStyle(fontSize: 13),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+                if (leg.isWalk) {
+                  return _buildWalkStep(context, leg, isLast: isLast);
+                } else {
+                  return _buildMatatuStep(context, leg, isLast: isLast);
+                }
+              }),
             ],
           ),
 
@@ -345,16 +341,7 @@ class _RouteDetailScreenState extends ConsumerState<RouteDetailScreen> {
     );
   }
 
-  Widget _buildTimelineStep(
-    BuildContext context, {
-    required IconData icon,
-    required Color iconColor,
-    required String title,
-    required String subtitle,
-    required String description,
-    bool isFirst = false,
-    bool isLast = false,
-  }) {
+  Widget _buildWalkStep(BuildContext context, JourneyLegModel leg, {required bool isLast}) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -362,16 +349,16 @@ class _RouteDetailScreenState extends ConsumerState<RouteDetailScreen> {
           children: [
             Container(
               padding: const EdgeInsets.all(AppSizes.p10),
-              decoration: BoxDecoration(
-                color: iconColor.withValues(alpha: 0.1),
+              decoration: const BoxDecoration(
+                color: AppColors.dividerLight,
                 shape: BoxShape.circle,
               ),
-              child: Icon(icon, color: iconColor, size: 22),
+              child: const Icon(Icons.directions_walk, color: AppColors.textSecondaryLight, size: 20),
             ),
             if (!isLast)
               Container(
                 width: 2,
-                height: 50,
+                height: 45,
                 color: AppColors.dividerLight,
               ),
           ],
@@ -384,23 +371,18 @@ class _RouteDetailScreenState extends ConsumerState<RouteDetailScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  title,
+                  'Walk to ${leg.toStage.name}',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
                 ),
+                const SizedBox(height: AppSizes.p4),
                 Text(
-                  subtitle,
+                  'Distance: ${(leg.distanceMeters / 1000).toStringAsFixed(2)} km • Approx. ${leg.durationMinutes} mins',
                   style: const TextStyle(
-                    fontWeight: FontWeight.w600,
                     color: AppColors.textSecondaryLight,
                     fontSize: 13,
                   ),
-                ),
-                const SizedBox(height: AppSizes.p4),
-                Text(
-                  description,
-                  style: Theme.of(context).textTheme.bodySmall,
                 ),
               ],
             ),
@@ -409,4 +391,105 @@ class _RouteDetailScreenState extends ConsumerState<RouteDetailScreen> {
       ],
     );
   }
+
+  Widget _buildMatatuStep(BuildContext context, JourneyLegModel leg, {required bool isLast}) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Column(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(AppSizes.p10),
+              decoration: BoxDecoration(
+                color: AppColors.primary.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.directions_bus, color: AppColors.primary, size: 20),
+            ),
+            if (!isLast)
+              Container(
+                width: 2,
+                height: 120,
+                color: AppColors.dividerLight,
+              ),
+          ],
+        ),
+        const SizedBox(width: AppSizes.p16),
+        Expanded(
+          child: Padding(
+            padding: const EdgeInsets.only(bottom: AppSizes.p20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Board Matatu Route ${leg.routeNumber}',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                Text(
+                  '${leg.fromStage.name} → ${leg.toStage.name}',
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textSecondaryLight,
+                    fontSize: 13,
+                  ),
+                ),
+                const SizedBox(height: AppSizes.p10),
+
+                // Render Servicing SACCOs for this leg
+                ...leg.saccoOptions.map((saccoOpt) {
+                  return Container(
+                    margin: const EdgeInsets.only(bottom: AppSizes.p8),
+                    padding: const EdgeInsets.all(AppSizes.p12),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.surface,
+                      borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
+                      border: Border.all(
+                        color: AppColors.dividerLight.withValues(alpha: 0.6),
+                      ),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              saccoOpt.sacco.name,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 14,
+                              ),
+                            ),
+                            Text(
+                              'KES ${saccoOpt.fareOffPeak} - ${saccoOpt.farePeak}',
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.primary,
+                                fontSize: 13,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: AppSizes.p4),
+                        Text(
+                          '${saccoOpt.fleetType} • ~${saccoOpt.durationMins} mins',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: AppColors.textSecondaryLight,
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
 }
+

@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../../../core/constants/app_sizes.dart';
-import '../../../../core/constants/app_colors.dart';
-import '../../../../core/widgets/glass_app_bar.dart';
-// import '../../../../core/widgets/primary_button.dart';
+import 'package:routez/core/constants/app_sizes.dart';
+import 'package:routez/core/constants/app_colors.dart';
+import 'package:routez/core/widgets/glass_app_bar.dart';
+import 'package:routez/features/authentication/presentation/providers/auth_provider.dart';
+import 'package:routez/features/authentication/presentation/providers/user_profile_provider.dart';
 
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
 
-  void _showLogoutDialog(BuildContext context) {
+  void _showLogoutDialog(BuildContext context, WidgetRef ref) {
     showDialog(
       context: context,
       builder: (context) {
@@ -32,9 +34,9 @@ class ProfileScreen extends StatelessWidget {
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.error,
               ),
-              onPressed: () {
+              onPressed: () async {
                 Navigator.pop(context);
-                context.go('/welcome');
+                await ref.read(authControllerProvider.notifier).signOut();
               },
               child: const Text('Logout'),
             ),
@@ -45,7 +47,10 @@ class ProfileScreen extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final profileAsync = ref.watch(userProfileProvider);
+    final authUser = ref.watch(authStateProvider).asData?.value;
+
     return Scaffold(
       appBar: const GlassAppBar(
         title: Text('Profile'),
@@ -93,18 +98,50 @@ class ProfileScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(height: AppSizes.p16),
-          const Center(
-            child: Text(
-              'Jane Doe',
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+
+          profileAsync.when(
+            loading: () => const Center(
+              child: Padding(
+                padding: EdgeInsets.all(8.0),
+                child: CircularProgressIndicator(),
+              ),
             ),
-          ),
-          const Center(
-            child: Text(
-              'jane.doe@example.com  •  +254 712 345 678',
-              style: TextStyle(color: AppColors.textSecondaryLight),
+            error: (_, __) => Column(
+              children: [
+                Text(
+                  authUser?.displayName ?? 'Commuter',
+                  style: const TextStyle(
+                      fontSize: 24, fontWeight: FontWeight.bold),
+                ),
+                Text(
+                  authUser?.email ?? '',
+                  style: const TextStyle(color: AppColors.textSecondaryLight),
+                ),
+              ],
             ),
+            data: (profile) {
+              final displayName = profile?.displayName ??
+                  authUser?.displayName ??
+                  'Commuter';
+              final email = profile?.email ?? authUser?.email ?? '';
+              final phone = profile?.phoneNumber ?? 'No phone added';
+
+              return Column(
+                children: [
+                  Text(
+                    displayName,
+                    style: const TextStyle(
+                        fontSize: 24, fontWeight: FontWeight.bold),
+                  ),
+                  Text(
+                    '$email  •  $phone',
+                    style: const TextStyle(color: AppColors.textSecondaryLight),
+                  ),
+                ],
+              );
+            },
           ),
+
           const SizedBox(height: AppSizes.p32),
 
           _buildProfileOption(
@@ -149,9 +186,11 @@ class ProfileScreen extends StatelessWidget {
                 context: context,
                 applicationName: 'Routez',
                 applicationVersion: '1.0.0',
-                applicationIcon: const Icon(Icons.directions_bus, color: AppColors.primary),
+                applicationIcon: const Icon(Icons.directions_bus,
+                    color: AppColors.primary),
                 children: const [
-                  Text('Routez is Nairobi\'s smartest Matatu and transit navigation assistant.'),
+                  Text(
+                      'Routez is Nairobi\'s smartest Matatu and transit navigation assistant.'),
                 ],
               );
             },
@@ -159,7 +198,7 @@ class ProfileScreen extends StatelessWidget {
 
           const SizedBox(height: AppSizes.p32),
           ElevatedButton(
-            onPressed: () => _showLogoutDialog(context),
+            onPressed: () => _showLogoutDialog(context, ref),
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primary,
             ),

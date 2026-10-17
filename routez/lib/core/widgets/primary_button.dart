@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 class PrimaryButton extends StatelessWidget {
   final String text;
-  final VoidCallback onPressed;
+  final VoidCallback? onPressed;
   final bool isLoading;
   final bool isOutlined;
   final Widget? icon;
@@ -18,11 +18,13 @@ class PrimaryButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final effectiveOnPressed = isLoading ? null : onPressed;
+
     return SizedBox(
       width: double.infinity,
       child: isOutlined
           ? OutlinedButton.icon(
-              onPressed: isLoading ? () {} : onPressed,
+              onPressed: effectiveOnPressed,
               icon: isLoading
                   ? const SizedBox(
                       height: 20,
@@ -33,7 +35,7 @@ class PrimaryButton extends StatelessWidget {
               label: Text(text),
             )
           : ElevatedButton.icon(
-              onPressed: isLoading ? () {} : onPressed,
+              onPressed: effectiveOnPressed,
               icon: isLoading
                   ? const SizedBox(
                       height: 20,

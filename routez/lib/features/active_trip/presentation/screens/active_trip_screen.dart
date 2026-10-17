@@ -7,9 +7,17 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/map_styles.dart';
 import '../../../../core/widgets/primary_button.dart';
 import '../../../settings/presentation/providers/settings_provider.dart';
+import 'package:routez/features/trip_history/data/models/trip_model.dart';
+import 'package:routez/features/trip_history/presentation/providers/trip_history_provider.dart';
+import 'dart:async';
+import 'package:geolocator/geolocator.dart';
+import '../../../../core/services/location_service.dart';
+import '../../../../core/services/google_directions_service.dart';
 
 class ActiveTripScreen extends ConsumerStatefulWidget {
-  const ActiveTripScreen({super.key});
+  final Map<String, dynamic>? tripData;
+
+  const ActiveTripScreen({super.key, this.tripData});
 
   @override
   ConsumerState<ActiveTripScreen> createState() => _ActiveTripScreenState();
@@ -20,83 +28,221 @@ class _ActiveTripScreenState extends ConsumerState<ActiveTripScreen> {
   int _currentStepIndex = 0;
   bool _isVoiceEnabled = true;
 
-  static const LatLng _pipelineStage = LatLng(-1.3155, 36.8901);
-  static const LatLng _tajMallStage = LatLng(-1.3180, 36.8935);
-  static const LatLng _kencomStage = LatLng(-1.2864, 36.8252);
-  static const LatLng _westlandsStage = LatLng(-1.2642, 36.8058);
+  StreamSubscription<Position>? _positionSubscription;
+  Position? _currentPosition;
 
-  static const CameraPosition _overviewCameraPosition = CameraPosition(
+  List<Map<String, dynamic>> _tripSteps = [];
+  Set<Marker> _tripMarkers = {};
+  Set<Polyline> _tripPolylines = {};
+  CameraPosition _initialCamera = const CameraPosition(
     target: LatLng(-1.2900, 36.8480),
     zoom: 12.5,
   );
 
-  final List<Map<String, dynamic>> _tripSteps = [
-    {
-      'title': 'Walk to Pipeline Stage',
-      'subtitle': '5 mins remaining (400m)',
-      'instruction': 'Head North on Outering Road walkway to Pipeline Stage.',
-      'icon': Icons.directions_walk,
-      'color': AppColors.primary,
-      'location': _pipelineStage,
-      'progress': 0.3,
-    },
-    {
-      'title': 'Board Matatu Route 23',
-      'subtitle': '40 mins in transit • Fare: KES 60',
-      'instruction': 'Board Matatu 23 towards Westlands. Stay alert for your stop.',
-      'icon': Icons.directions_bus,
-      'color': AppColors.accent,
-      'location': _kencomStage,
-      'progress': 0.65,
-    },
-    {
-      'title': 'Alight at Westlands Stage',
-      'subtitle': '2 mins walk to final destination',
-      'instruction': 'Prepare to alight at Westlands Stage near the flyover.',
-      'icon': Icons.location_on,
-      'color': AppColors.error,
-      'location': _westlandsStage,
-      'progress': 0.95,
-    },
-  ];
-
-  Set<Marker> _getTripMarkers() {
-    return {
-      Marker(
-        markerId: const MarkerId('start_stage'),
-        position: _pipelineStage,
-        infoWindow: const InfoWindow(title: 'Start: Pipeline Stage'),
-        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
-      ),
-      Marker(
-        markerId: const MarkerId('transit_stage'),
-        position: _kencomStage,
-        infoWindow: const InfoWindow(title: 'Transfer: Kencom Stage'),
-        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueAzure),
-      ),
-      Marker(
-        markerId: const MarkerId('end_stage'),
-        position: _westlandsStage,
-        infoWindow: const InfoWindow(title: 'Destination: Westlands Stage'),
-        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
-      ),
-    };
+  @override
+  void initState() {
+    super.initState();
+    _initializeTripData();
+    _startLocationUpdates();
   }
 
-  Set<Polyline> _getTripPolylines() {
-    return {
-      const Polyline(
-        polylineId: PolylineId('transit_route'),
-        points: [
-          _pipelineStage,
-          _tajMallStage,
-          _kencomStage,
-          _westlandsStage,
-        ],
-        color: AppColors.accent,
-        width: 5,
-      ),
-    };
+  @override
+  void dispose() {
+    _positionSubscription?.cancel();
+    _mapController?.dispose();
+    super.dispose();
+  }
+
+  void _startLocationUpdates() {
+    _positionSubscription = LocationService.getPositionStream().listen((Position position) {
+      if (mounted) {
+        setState(() {
+          _currentPosition = position;
+        });
+        _checkProximityToNextStep();
+      }
+    });
+  }
+
+  void _checkProximityToNextStep() {
+    if (_tripSteps.isEmpty || _currentPosition == null) return;
+    
+    final currentStep = _tripSteps[_currentStepIndex];
+    final stepLocation = currentStep['location'] as LatLng;
+    
+    final distanceInMeters = Geolocator.distanceBetween(
+      _currentPosition!.latitude,
+      _currentPosition!.longitude,
+      stepLocation.latitude,
+      stepLocation.longitude,
+    );
+
+    // If within 50 meters of the step location and not the last step
+    if (distanceInMeters < 50 && _currentStepIndex < _tripSteps.length - 1) {
+      _showProximityAlert();
+    }
+  }
+
+  void _initializeTripData() {
+    final extra = widget.tripData;
+    if (extra != null && extra['directions'] is DirectionsRouteInfo) {
+      final directions = extra['directions'] as DirectionsRouteInfo;
+      final routeData = extra['routeData'] as Map<String, dynamic>? ?? {};
+
+      // Build steps
+      final steps = <Map<String, dynamic>>[];
+      for (int i = 0; i < directions.steps.length; i++) {
+        final step = directions.steps[i];
+        
+        final icon = step.travelMode == 'TRANSIT' 
+            ? Icons.directions_bus 
+            : Icons.directions_walk;
+            
+        final color = i == 0 
+            ? AppColors.primary 
+            : i == directions.steps.length - 1 
+                ? AppColors.error 
+                : AppColors.accent;
+
+        steps.add({
+          'title': step.travelMode == 'TRANSIT' ? 'Transit' : 'Walk',
+          'subtitle': step.durationText,
+          'instruction': step.instruction,
+          'icon': icon,
+          'color': color,
+          'location': step.startLocation,
+          'progress': (i + 1) / directions.steps.length,
+        });
+      }
+      _tripSteps = steps;
+
+      // Build Polylines
+      if (directions.polylinePoints.isNotEmpty) {
+        _tripPolylines = {
+          Polyline(
+            polylineId: const PolylineId('transit_route'),
+            points: directions.polylinePoints,
+            color: AppColors.accent,
+            width: 5,
+          ),
+        };
+        _initialCamera = CameraPosition(
+          target: directions.polylinePoints.first,
+          zoom: 14.5,
+        );
+      }
+
+      // Build Markers
+      final markers = <Marker>{};
+      if (directions.polylinePoints.isNotEmpty) {
+        markers.add(
+          Marker(
+            markerId: const MarkerId('start'),
+            position: directions.polylinePoints.first,
+            infoWindow: InfoWindow(title: 'Start: ${routeData['origin'] ?? 'Origin'}'),
+            icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
+          ),
+        );
+        markers.add(
+          Marker(
+            markerId: const MarkerId('end'),
+            position: directions.polylinePoints.last,
+            infoWindow: InfoWindow(title: 'End: ${routeData['destination'] ?? 'Destination'}'),
+            icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
+          ),
+        );
+      }
+      for (int i = 0; i < directions.steps.length; i++) {
+        final step = directions.steps[i];
+        if (i > 0 && i < directions.steps.length - 1) {
+          markers.add(
+            Marker(
+              markerId: MarkerId('step_$i'),
+              position: step.startLocation,
+              icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueAzure),
+            ),
+          );
+        }
+      }
+      _tripMarkers = markers;
+
+    } else {
+      // Fallback Mock Data
+      const LatLng pipelineStage = LatLng(-1.3155, 36.8901);
+      const LatLng tajMallStage = LatLng(-1.3180, 36.8935);
+      const LatLng kencomStage = LatLng(-1.2864, 36.8252);
+      const LatLng westlandsStage = LatLng(-1.2642, 36.8058);
+
+      _tripSteps = [
+        {
+          'title': 'Walk to Pipeline Stage',
+          'subtitle': '5 mins remaining (400m)',
+          'instruction': 'Head North on Outering Road walkway to Pipeline Stage.',
+          'icon': Icons.directions_walk,
+          'color': AppColors.primary,
+          'location': pipelineStage,
+          'progress': 0.3,
+        },
+        {
+          'title': 'Board Matatu Route 23',
+          'subtitle': '40 mins in transit • Fare: KES 60',
+          'instruction': 'Board Matatu 23 towards Westlands. Stay alert for your stop.',
+          'icon': Icons.directions_bus,
+          'color': AppColors.accent,
+          'location': kencomStage,
+          'progress': 0.65,
+        },
+        {
+          'title': 'Alight at Westlands Stage',
+          'subtitle': '2 mins walk to final destination',
+          'instruction': 'Prepare to alight at Westlands Stage near the flyover.',
+          'icon': Icons.location_on,
+          'color': AppColors.error,
+          'location': westlandsStage,
+          'progress': 0.95,
+        },
+      ];
+
+      _tripMarkers = {
+        Marker(
+          markerId: const MarkerId('start_stage'),
+          position: pipelineStage,
+          infoWindow: const InfoWindow(title: 'Start: Pipeline Stage'),
+          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
+        ),
+        Marker(
+          markerId: const MarkerId('transit_stage'),
+          position: kencomStage,
+          infoWindow: const InfoWindow(title: 'Transfer: Kencom Stage'),
+          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueAzure),
+        ),
+        Marker(
+          markerId: const MarkerId('end_stage'),
+          position: westlandsStage,
+          infoWindow: const InfoWindow(title: 'Destination: Westlands Stage'),
+          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
+        ),
+      };
+
+      _tripPolylines = {
+        const Polyline(
+          polylineId: PolylineId('transit_route'),
+          points: [
+            pipelineStage,
+            tajMallStage,
+            kencomStage,
+            westlandsStage,
+          ],
+          color: AppColors.accent,
+          width: 5,
+        ),
+      };
+      
+      _initialCamera = const CameraPosition(
+        target: LatLng(-1.2900, 36.8480),
+        zoom: 12.5,
+      );
+    }
   }
 
   void _nextStep() {
@@ -120,9 +266,10 @@ class _ActiveTripScreenState extends ConsumerState<ActiveTripScreen> {
   }
 
   void _animateCameraToCurrentStep() {
+    if (_tripSteps.isEmpty) return;
     final stepLocation = _tripSteps[_currentStepIndex]['location'] as LatLng;
     _mapController?.animateCamera(
-      CameraUpdate.newLatLngZoom(stepLocation, 14.5),
+      CameraUpdate.newLatLngZoom(stepLocation, 16.0),
     );
   }
 
@@ -153,8 +300,12 @@ class _ActiveTripScreenState extends ConsumerState<ActiveTripScreen> {
     );
   }
 
+  bool _isProximityAlertVisible = false;
+
   void _showProximityAlert() {
+    if (_tripSteps.isEmpty || _isProximityAlertVisible) return;
     final step = _tripSteps[_currentStepIndex];
+    _isProximityAlertVisible = true;
     showDialog(
       context: context,
       builder: (context) {
@@ -176,6 +327,7 @@ class _ActiveTripScreenState extends ConsumerState<ActiveTripScreen> {
           actions: [
             ElevatedButton(
               onPressed: () {
+                _isProximityAlertVisible = false;
                 Navigator.pop(context);
                 if (_currentStepIndex < _tripSteps.length - 1) {
                   _nextStep();
@@ -190,7 +342,9 @@ class _ActiveTripScreenState extends ConsumerState<ActiveTripScreen> {
           ],
         );
       },
-    );
+    ).then((_) {
+      _isProximityAlertVisible = false;
+    });
   }
 
   void _showEndTripConfirmation() {
@@ -212,6 +366,22 @@ class _ActiveTripScreenState extends ConsumerState<ActiveTripScreen> {
             ),
             ElevatedButton(
               onPressed: () {
+                final routeData = widget.tripData?['routeData'] as Map<String, dynamic>? ?? {};
+                final completedTrip = TripModel(
+                  id: '',
+                  origin: routeData['origin'] ?? 'Pipeline Stage',
+                  destination: routeData['destination'] ?? 'Westlands Stage',
+                  routeName: routeData['routeNumber'] != null ? 'Route ${routeData['routeNumber']}' : 'Route 23 Express',
+                  routeNumber: routeData['routeNumber'] ?? '23',
+                  fare: 80, // Hardcoded for now
+                  durationMins: 45,
+                  departedAt: DateTime.now().subtract(const Duration(minutes: 45)),
+                  arrivedAt: DateTime.now(),
+                  paymentMethod: 'M-Pesa',
+                  mpesaRef: 'QX${DateTime.now().millisecondsSinceEpoch.toString().substring(7)}',
+                  status: 'Completed',
+                );
+                ref.read(tripHistoryControllerProvider.notifier).addTrip(completedTrip);
                 Navigator.pop(context);
                 context.pop();
               },
@@ -229,20 +399,28 @@ class _ActiveTripScreenState extends ConsumerState<ActiveTripScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if (_tripSteps.isEmpty) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+
     final currentStep = _tripSteps[_currentStepIndex];
     final themeMode = ref.watch(themeModeProvider);
     final platformBrightness = MediaQuery.platformBrightnessOf(context);
     final isDark = themeMode == ThemeMode.dark ||
         (themeMode == ThemeMode.system && platformBrightness == Brightness.dark);
+    
+    final routeData = widget.tripData?['routeData'] as Map<String, dynamic>? ?? {};
+    final destination = routeData['destination'] ?? 'Westlands';
+    final durationText = widget.tripData?['directions']?.durationText ?? '40 mins';
 
     return Scaffold(
       body: Stack(
         children: [
           // Live Google Map Widget for Active Trip
           GoogleMap(
-            initialCameraPosition: _overviewCameraPosition,
-            markers: _getTripMarkers(),
-            polylines: _getTripPolylines(),
+            initialCameraPosition: _initialCamera,
+            markers: _tripMarkers,
+            polylines: _tripPolylines,
             myLocationEnabled: true,
             myLocationButtonEnabled: false,
             zoomControlsEnabled: false,
@@ -251,6 +429,35 @@ class _ActiveTripScreenState extends ConsumerState<ActiveTripScreen> {
               _mapController = controller;
               final style = isDark ? kMapStyleDark : kMapStyleLight;
               controller.setMapStyle(style);
+              
+              if (widget.tripData != null && widget.tripData!['directions'] != null) {
+                  final points = (widget.tripData!['directions'] as DirectionsRouteInfo).polylinePoints;
+                  if (points.isNotEmpty) {
+                      double minLat = points.first.latitude;
+                      double maxLat = points.first.latitude;
+                      double minLng = points.first.longitude;
+                      double maxLng = points.first.longitude;
+
+                      for (var point in points) {
+                        if (point.latitude < minLat) minLat = point.latitude;
+                        if (point.latitude > maxLat) maxLat = point.latitude;
+                        if (point.longitude < minLng) minLng = point.longitude;
+                        if (point.longitude > maxLng) maxLng = point.longitude;
+                      }
+
+                      Future.delayed(const Duration(milliseconds: 500), () {
+                        _mapController?.animateCamera(
+                          CameraUpdate.newLatLngBounds(
+                            LatLngBounds(
+                              southwest: LatLng(minLat, minLng),
+                              northeast: LatLng(maxLat, maxLng),
+                            ),
+                            50.0,
+                          ),
+                        );
+                      });
+                  }
+              }
             },
           ),
 
@@ -329,14 +536,16 @@ class _ActiveTripScreenState extends ConsumerState<ActiveTripScreen> {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Text(
-                            'Active Navigation • To Westlands',
+                            'Active Navigation • To $destination',
                             style: Theme.of(context)
                                 .textTheme
                                 .bodySmall
                                 ?.copyWith(color: Colors.white70),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
                           Text(
-                            'ETA: 10:45 AM (40 mins)',
+                            'Duration: $durationText',
                             style: Theme.of(context)
                                 .textTheme
                                 .titleMedium
@@ -377,9 +586,16 @@ class _ActiveTripScreenState extends ConsumerState<ActiveTripScreen> {
                   // Step Indicator Dots
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
-                    children: List.generate(_tripSteps.length, (index) {
-                      final isActive = index == _currentStepIndex;
-                      final isPassed = index < _currentStepIndex;
+                    children: List.generate(_tripSteps.length > 5 ? 5 : _tripSteps.length, (i) {
+                      // Show up to 5 dots if there are many steps
+                      int relativeIndex = i;
+                      if (_tripSteps.length > 5 && _currentStepIndex > 2) {
+                          relativeIndex = _currentStepIndex - 2 + i;
+                          if (relativeIndex >= _tripSteps.length) return const SizedBox.shrink();
+                      }
+                      
+                      final isActive = relativeIndex == _currentStepIndex;
+                      final isPassed = relativeIndex < _currentStepIndex;
 
                       return AnimatedContainer(
                         duration: const Duration(milliseconds: 300),
@@ -460,6 +676,8 @@ class _ActiveTripScreenState extends ConsumerState<ActiveTripScreen> {
                                   fontSize: 12,
                                   fontWeight: FontWeight.w500,
                                 ),
+                            maxLines: 3,
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
                       ),
@@ -492,14 +710,6 @@ class _ActiveTripScreenState extends ConsumerState<ActiveTripScreen> {
                                 color: _isVoiceEnabled ? AppColors.accent : AppColors.textSecondaryLight,
                               ),
                               const SizedBox(width: AppSizes.p4),
-                              // Text(
-                              //   _isVoiceEnabled ? 'Voice ON' : 'Muted',
-                              //   style: TextStyle(
-                              //     fontSize: 11,
-                              //     fontWeight: FontWeight.bold,
-                              //     color: _isVoiceEnabled ? AppColors.accent : AppColors.textSecondaryLight,
-                              //   ),
-                              // ),
                             ],
                           ),
                         ),
