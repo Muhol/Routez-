@@ -30,7 +30,7 @@
     "@radix-ui/react-tooltip": "^1.4.1",
     "@supabase/ssr": "^0.12.7",
     "@supabase/supabase-js": "^2.118.0",
-    "@tailwindcss/oxide-win32-x64-msvc": "^4.3.3",
+
     "@tailwindcss/postcss": "^4.3.3",
     "@tanstack/react-table": "^9.3.1",
     "class-variance-authority": "^0.7.1",
@@ -61,5 +61,8 @@
     "postcss": "^8.5.31",
     "tailwindcss": "^4",
     "typescript": "^5"
+  },
+  "optionalDependencies": {
+    "@tailwindcss/oxide-win32-x64-msvc": "^4.3.3"
   }
 }
