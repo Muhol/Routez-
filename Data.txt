@@ -1,0 +1,290 @@
+ROUTE 1
+Route details
+- Route name: cbd - kawangware
+- Route number: 46
+Stages along the route
+Stage 1
+- Stage order: 1
+- Stage name: valley road
+- GPS location: -1.2922522, 36.8051638
+Stage 2
+- Stage order: 2
+- Stage name: The nairobi hospital
+- GPS location: -1.2962718, 36.8051893
+Stage 3
+- Stage order: 3
+- Stage name: DoD
+- GPS location: -1.2953882, 36.8010262
+Stage 4
+- Stage order: 4
+- Stage name: hurlingham shopping centre
+- GPS location: -1.2946940, 36.7993277
+Stage 5
+- Stage order: 5
+- Stage name: nairobi womens hospital
+- GPS location: -1.2937032, 36.7960289
+Stage 6
+- Stage order: 6
+- Stage name: Chaka place
+- GPS location: -1.2926289, 36.7914141
+Stage 7
+- Stage order: 7
+- Stage name: yaya centre
+- GPS location: -1.2926604, 36.7874046
+Stage 8
+- Stage order: 8
+- Stage name: Wood Avenue
+- GPS location: -1.2923101, 36.7860658
+Stage 9
+- Stage order: 9
+- Stage name: Kilimani Primary School
+- GPS location: -1.2928766, 36.7827100
+Stage 10
+- Stage order: 10
+- Stage name: Kirichwa Road
+- GPS location: -1.2925431, 36.7815382
+Stage 11
+- Stage order: 11
+- Stage name: Elgeyo marakwet north
+- GPS location: -1.2927771, 36.7789439
+Stage 12
+- Stage order: 12
+- Stage name: Bangladesh
+- GPS location: -1.2919260, 36.7745571
+Stage 13
+- Stage order: 13
+- Stage name: methodist church in kenya nairobi
+- GPS location: -1.2893239, 36.7712543
+Stage 14
+- Stage order: 14
+- Stage name: valley acrade
+- GPS location: -1.2904291, 36.7693090
+Stage 15
+- Stage order: 15
+- Stage name: maria immaculata hospital
+- GPS location: -1.2894218, 36.7647262
+Stage 16
+- Stage order: 16
+- Stage name: amboseli road
+- GPS location: -1.2896450, 36.7598556
+Stage 17
+- Stage order: 17
+- Stage name: congo stage
+- GPS location: -1.2892612, 36.7530525
+Stage 18
+- Stage order: 18
+- Stage name: kawangware mwisho
+- GPS location: -1.2839327, 36.7425865
+Roads used along Route 1
+The spreadsheet lists these roads as roads used along the route. They are not individually assigned to stages.
+1. Valley road
+2. Ralph Bunche Road
+3. Argwings Kodhek road
+4. Ole Odume Road
+5. Gitanga Road
+6. Kawangware Road
+
+ROUTE 2
+Route details
+- Route name: kawangware - kenyatta
+- Route number: 2
+Stages along the route
+Stage 1
+- Stage order: 1
+- Stage name: mlango soko
+- GPS location: -1.2886710, 36.7431820
+Stage 2
+- Stage order: 2
+- Stage name: shimonne
+- GPS location: -1.2896209, 36.7445288
+Stage 3
+- Stage order: 3
+- Stage name: kinyanjui
+- GPS location: -1.2916257, 36.7474437
+Stage 4
+- Stage order: 4
+- Stage name: deliverance church riruta
+- GPS location: -1.2926691, 36.7515649
+Stage 5
+- Stage order: 5
+- Stage name: dagoretti corner stage
+- GPS location: -1.2984455, 36.7593627
+Stage 6
+- Stage order: 6
+- Stage name: prestige plaza
+- GPS location: -1.2997386, 36.7871511
+Stage 7
+- Stage order: 7
+- Stage name: uchumi hyper parking lot
+- GPS location: -1.300068, 36.7913323
+Stage 8
+- Stage order: 8
+- Stage name: kenyatta national hospital
+- GPS location: -1.2976450, 36.8041610
+Stage 9
+- Stage order: 9
+- Stage name: nairobi area traffic police headquarters
+- GPS location: -1.2965946, 36.8082440
+Stage 10
+- Stage order: 10
+- Stage name: library
+- GPS location: -1.2950151, 36.8102288
+Roads used along Route 2
+The spreadsheet lists these roads as roads used along the route. They are not individually assigned to stages.
+1. naivasha road
+2. ngong road
+
+ROUTE 3
+Route details
+- Route name: cbd - kenyatta
+- Route number: 7c
+Stages along the route
+Stage 1
+- Stage order: 1
+- Stage name: community
+- GPS location: -1.2920417, 36.8130901
+Stage 2
+- Stage order: 2
+- Stage name: german medical center
+- GPS location: -1.2986613, 36.8114539
+Stage 3
+- Stage order: 3
+- Stage name: TSC
+- GPS location: -1.2995174, 36.8157019
+Stage 4
+- Stage order: 4
+- Stage name: NTSA
+- GPS location: -1.3013465, 36.8198234
+Stage 5
+- Stage order: 5
+- Stage name: Equity Center
+- GPS location: -1.3024872, 36.8122140
+Roads used along Route 3
+The spreadsheet lists these roads as roads used along the route. They are not individually assigned to stages.
+1. kenyatta avenue
+2. ngong road
+3. ragati road
+4. haile selassie avenue
+5. chyulu road
+6. mara road
+7. kilimanjaro road
+8. elgon road
+9. upperhill road
+10. hospital road
+
+ROUTE 4
+The spreadsheet contains two separate route records under Route 4. They are kept separate because they have different route names and one has a route number.
+Route record 1
+Route details
+- Route name: Kawangware - Kibera (dc)
+- Route number: [BLANK IN SOURCE]
+Stages along the route
+Stage 1
+- Stage order: 1
+- Stage name: Deliverance Church Riruta
+- GPS location: -1.2926691, 36.7515649
+Stage 2
+- Stage order: 2
+- Stage name: kaberia junction / wanyee stage
+- GPS location: -1.2970444, 36.7565498
+Stage 3
+- Stage order: 3
+- Stage name: tea board / dagoretti corner
+- GPS location: -1.2980560, 36.7579710
+Stage 4
+- Stage order: 4
+- Stage name: kenol dagoretti corner
+- GPS location: -1.2984311, 36.7598710
+Stage 5
+- Stage order: 5
+- Stage name: junction
+- GPS location: -1.2990210, 36.7625760
+Stage 6
+- Stage order: 6
+- Stage name: jamhuri shopping centre
+- GPS location: -1.3044222, 36.7710008
+Stage 7
+- Stage order: 7
+- Stage name: coca cola stage
+- GPS location: -1.3052642, 36.7727084
+Stage 8
+- Stage order: 8
+- Stage name: togo apartment
+- GPS location: -1.3048831, 36.7745766
+Stage 9
+- Stage order: 9
+- Stage name: woodley
+- GPS location: -1.3038058, 36.7795893
+Roads used along Route 4, record 1
+The spreadsheet lists these roads as roads used along this route. They are not individually assigned to stages.
+1. naivasha road
+2. ngong road
+3. kibera station road
+4. joseph kangethe road
+
+Route record 2
+Route details
+- Route name: Cbd - Kibera
+- Route number: 8
+Stages along the route
+Stage 1
+- Stage order: 1
+- Stage name: Kenyatta national hospital
+- GPS location: [BLANK IN SOURCE]
+Stage 2
+- Stage order: 2
+- Stage name: Coptic / Mimosa
+- GPS location: [BLANK IN SOURCE]
+Stage 3
+- Stage order: 3
+- Stage name: Uchumi / National oil
+- GPS location: [BLANK IN SOURCE]
+Stage 4
+- Stage order: 4
+- Stage name: Nursing council
+- GPS location: [BLANK IN SOURCE]
+Stage 5
+- Stage order: 5
+- Stage name: Kwa Dc
+- GPS location: [BLANK IN SOURCE]
+Stage 6
+- Stage order: 6
+- Stage name: Makina
+- GPS location: [BLANK IN SOURCE]
+Stage 7
+- Stage order: 7
+- Stage name: Karanja
+- GPS location: [BLANK IN SOURCE]
+Stage 8
+- Stage order: 8
+- Stage name: Fort Jesus
+- GPS location: [BLANK IN SOURCE]
+Stage 9
+- Stage order: 9
+- Stage name: Olympic Primary School
+- GPS location: [BLANK IN SOURCE]
+Stage 10
+- Stage order: 10
+- Stage name: Olympic Primary School Stage
+- GPS location: [BLANK IN SOURCE]
+Stage 11
+- Stage order: 11
+- Stage name: Equity Ayani
+- GPS location: [BLANK IN SOURCE]
+Stage 12
+- Stage order: 12
+- Stage name: Ayani 42
+- GPS location: [BLANK IN SOURCE]
+Roads used along Route 4, record 2
+- Roads used: [NO ROAD NAMES VISIBLE IN SOURCE]
+
+Supabase data-integrity notes
+Before entering this data into Supabase, keep the following distinctions:
+- Routes: Each route record contains its route name and route number.
+- Stages: Each stage belongs to a route and has a stage order, stage name, and GPS location when supplied.
+- Roads: Each road belongs to the route-level road list. The spreadsheet does not establish a direct relationship between a particular road and a particular stage.
+- Missing values: [BLANK IN SOURCE] is a transcription marker, not a literal database value. Use NULL or another representation only according to your schema and import rules.
+- GPS coordinates: The coordinates above remain in their original combined latitude-and-longitude form. If your Supabase schema uses separate numeric columns, split them during a controlled import without rounding them.
+- Route identifiers: Route numbers such as 46, 2, 7c, and 8 should be handled according to the existing schema. If the route number is a text identifier, use a text column so alphanumeric values such as 7c are supported.
+- Road ordering: The road list order is preserved from the source. The order does not imply a mapping to stage order.
+Verification point: Route 2, Stage 7 has a latitude shown as -1.300068 in the screenshot, with six decimal places. I have retained that precision rather than adding a zero. The route number for Route 4, record 1, and the GPS coordinates for Route 4, record 2, are not visible in the supplied images, so they remain unfilled.

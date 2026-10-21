@@ -63,6 +63,12 @@ CREATE TABLE IF NOT EXISTS sacco_route_stages (
     stop_order INTEGER NOT NULL,
     distance_from_start_km NUMERIC NOT NULL DEFAULT 0.0,
     eta_from_start_mins INTEGER NOT NULL DEFAULT 0,
+    fare_offpeak INTEGER DEFAULT 0,
+    fare_peak INTEGER DEFAULT 0,
+    fare_offpeak_min INTEGER DEFAULT 0,
+    fare_offpeak_max INTEGER DEFAULT 0,
+    fare_peak_min INTEGER DEFAULT 0,
+    fare_peak_max INTEGER DEFAULT 0,
     UNIQUE (sacco_route_id, stage_id),
     UNIQUE (sacco_route_id, stop_order)
 );
@@ -146,13 +152,29 @@ INSERT INTO service_alerts (id, sacco_route_id, title, message, severity, starts
 ON CONFLICT DO NOTHING;
 
 -- ======================================================
--- ROW LEVEL SECURITY POLICIES (Allow anonymous public reads)
+-- ROW LEVEL SECURITY POLICIES (Full CRUD access for admin & commuters)
 -- ======================================================
-CREATE POLICY "Public read routes" ON routes FOR SELECT USING (true);
-CREATE POLICY "Public read saccos" ON saccos FOR SELECT USING (true);
-CREATE POLICY "Public read stages" ON stages FOR SELECT USING (true);
-CREATE POLICY "Public read sacco_routes" ON sacco_routes FOR SELECT USING (true);
-CREATE POLICY "Public read sacco_route_stages" ON sacco_route_stages FOR SELECT USING (true);
-CREATE POLICY "Public read sacco_route_fares" ON sacco_route_fares FOR SELECT USING (true);
-CREATE POLICY "Public read service_alerts" ON service_alerts FOR SELECT USING (true);
+DROP POLICY IF EXISTS "Public read routes" ON routes;
+DROP POLICY IF EXISTS "Public read saccos" ON saccos;
+DROP POLICY IF EXISTS "Public read stages" ON stages;
+DROP POLICY IF EXISTS "Public read sacco_routes" ON sacco_routes;
+DROP POLICY IF EXISTS "Public read sacco_route_stages" ON sacco_route_stages;
+DROP POLICY IF EXISTS "Public read sacco_route_fares" ON sacco_route_fares;
+DROP POLICY IF EXISTS "Public read service_alerts" ON service_alerts;
+
+DROP POLICY IF EXISTS "Allow all on routes" ON routes;
+DROP POLICY IF EXISTS "Allow all on saccos" ON saccos;
+DROP POLICY IF EXISTS "Allow all on stages" ON stages;
+DROP POLICY IF EXISTS "Allow all on sacco_routes" ON sacco_routes;
+DROP POLICY IF EXISTS "Allow all on sacco_route_stages" ON sacco_route_stages;
+DROP POLICY IF EXISTS "Allow all on sacco_route_fares" ON sacco_route_fares;
+DROP POLICY IF EXISTS "Allow all on service_alerts" ON service_alerts;
+
+CREATE POLICY "Allow all on routes" ON routes FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Allow all on saccos" ON saccos FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Allow all on stages" ON stages FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Allow all on sacco_routes" ON sacco_routes FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Allow all on sacco_route_stages" ON sacco_route_stages FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Allow all on sacco_route_fares" ON sacco_route_fares FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Allow all on service_alerts" ON service_alerts FOR ALL USING (true) WITH CHECK (true);
 

@@ -81,3 +81,8 @@ Step 2: Upgrade home_screen.dart with a map widget UI and working quick action b
 Step 3: Enhance search_screen.dart with map picker UI & location autocomplete dropdown.
 Step 4: Build route_detail_screen.dart and enhance active_trip_screen.dart with multi-step trip navigation.
 Step 5: Create missing secondary screens (edit_profile_screen.dart, help_support_screen.dart).
+
+
+
+
+now i want to repopulate the supabase database with real datai need you to clear it and repopulate it with the data i give you, but before you do anything please check and inform me of the data ive provided is in line with the database structure, tables and fields, let me know where the data is not compatible with the database 
