@@ -15,11 +15,12 @@ class ProfileScreen extends ConsumerWidget {
       context: context,
       builder: (context) {
         return AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           title: const Row(
             children: [
               Icon(Icons.logout_rounded, color: AppColors.error),
               SizedBox(width: AppSizes.p8),
-              Text('Confirm Logout'),
+              Text('Confirm Logout', style: TextStyle(fontWeight: FontWeight.bold)),
             ],
           ),
           content: const Text(
@@ -38,7 +39,7 @@ class ProfileScreen extends ConsumerWidget {
                 Navigator.pop(context);
                 await ref.read(authControllerProvider.notifier).signOut();
               },
-              child: const Text('Logout'),
+              child: const Text('Logout', style: TextStyle(color: Colors.white)),
             ),
           ],
         );
@@ -48,182 +49,348 @@ class ProfileScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final profileAsync = ref.watch(userProfileProvider);
     final authUser = ref.watch(authStateProvider).asData?.value;
 
+    final cardBg = isDark ? const Color(0xFF161C23) : Colors.white;
+    final cardBorder = isDark ? Colors.white.withValues(alpha: 0.08) : Colors.black.withValues(alpha: 0.05);
+
     return Scaffold(
+      backgroundColor: isDark ? AppColors.backgroundDark : const Color(0xFFF7F9FB),
       appBar: const GlassAppBar(
-        title: Text('Profile'),
+        title: Text('Account Profile'),
       ),
       body: ListView(
-        padding: const EdgeInsets.fromLTRB(
-          AppSizes.p16,
-          AppSizes.p16,
-          AppSizes.p16,
-          100, // Bottom space for bottom nav shell
-        ),
+        padding: const EdgeInsets.symmetric(horizontal: AppSizes.p20, vertical: AppSizes.p16),
+        physics: const BouncingScrollPhysics(),
         children: [
-          Center(
-            child: Stack(
-              children: [
-                CircleAvatar(
-                  radius: 50,
-                  backgroundColor: AppColors.primary.withValues(alpha: 0.15),
-                  child: const Icon(
-                    Icons.person,
-                    size: 50,
-                    color: AppColors.primary,
-                  ),
+          // ── Header Profile Card ─────────────────────────────────────────────
+          Container(
+            padding: const EdgeInsets.all(AppSizes.p20),
+            decoration: BoxDecoration(
+              color: cardBg,
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(color: cardBorder, width: 1.2),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: isDark ? 0.35 : 0.05),
+                  blurRadius: 18,
+                  offset: const Offset(0, 4),
                 ),
-                Positioned(
-                  bottom: 0,
-                  right: 0,
-                  child: InkWell(
-                    onTap: () => context.push('/edit-profile'),
-                    child: Container(
-                      padding: const EdgeInsets.all(AppSizes.p6),
-                      decoration: const BoxDecoration(
-                        color: AppColors.primary,
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(
-                        Icons.edit,
-                        color: Colors.white,
-                        size: 14,
+              ],
+            ),
+            child: Column(
+              children: [
+                Stack(
+                  children: [
+                    CircleAvatar(
+                      radius: 46,
+                      backgroundColor: (isDark ? AppColors.accent : AppColors.primary).withValues(alpha: 0.15),
+                      child: Icon(
+                        Icons.person_rounded,
+                        size: 48,
+                        color: isDark ? AppColors.accent : AppColors.primary,
                       ),
                     ),
+                    Positioned(
+                      bottom: 0,
+                      right: 0,
+                      child: InkWell(
+                        onTap: () => context.push('/edit-profile'),
+                        borderRadius: BorderRadius.circular(AppSizes.radiusFull),
+                        child: Container(
+                          padding: const EdgeInsets.all(AppSizes.p6),
+                          decoration: BoxDecoration(
+                            color: isDark ? AppColors.accent : AppColors.primary,
+                            shape: BoxShape.circle,
+                            border: Border.all(color: cardBg, width: 2),
+                          ),
+                          child: const Icon(
+                            Icons.edit_rounded,
+                            color: Colors.white,
+                            size: 14,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: AppSizes.p12),
+
+                profileAsync.when(
+                  loading: () => const Padding(
+                    padding: EdgeInsets.all(8.0),
+                    child: CircularProgressIndicator(),
                   ),
+                  error: (_, __) => Column(
+                    children: [
+                      Text(
+                        authUser?.displayName ?? 'Nairobi Commuter',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: isDark ? Colors.white : AppColors.textLight,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        authUser?.email ?? '',
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: isDark ? Colors.white54 : AppColors.textSecondaryLight,
+                        ),
+                      ),
+                    ],
+                  ),
+                  data: (profile) {
+                    final displayName = profile?.displayName ?? authUser?.displayName ?? 'Nairobi Commuter';
+                    final email = profile?.email ?? authUser?.email ?? '';
+                    final phone = profile?.phoneNumber ?? '';
+
+                    return Column(
+                      children: [
+                        Text(
+                          displayName,
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: isDark ? Colors.white : AppColors.textLight,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: (isDark ? AppColors.accent : AppColors.primary).withValues(alpha: 0.12),
+                                borderRadius: BorderRadius.circular(AppSizes.radiusFull),
+                              ),
+                              child: Text(
+                                'Verified Rider',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.bold,
+                                  color: isDark ? AppColors.accent : AppColors.primary,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          [email, if (phone.isNotEmpty) phone].join('  •  '),
+                          style: TextStyle(
+                            fontSize: 12.5,
+                            color: isDark ? Colors.white54 : AppColors.textSecondaryLight,
+                          ),
+                        ),
+                      ],
+                    );
+                  },
                 ),
               ],
             ),
           ),
-          const SizedBox(height: AppSizes.p16),
 
-          profileAsync.when(
-            loading: () => const Center(
-              child: Padding(
-                padding: EdgeInsets.all(8.0),
-                child: CircularProgressIndicator(),
+          const SizedBox(height: AppSizes.p24),
+
+          // ── Account & Commute Section ───────────────────────────────────────
+          Text(
+            'COMMUTE & PREFERENCES',
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.bold,
+              letterSpacing: 0.8,
+              color: isDark ? Colors.white54 : AppColors.textSecondaryLight,
+            ),
+          ),
+          const SizedBox(height: AppSizes.p8),
+          Container(
+            decoration: BoxDecoration(
+              color: cardBg,
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: cardBorder, width: 1.2),
+            ),
+            child: Column(
+              children: [
+                _buildOptionRow(
+                  context: context,
+                  icon: Icons.person_outline_rounded,
+                  title: 'Edit Profile',
+                  subtitle: 'Name, phone number & default transit mode',
+                  isDark: isDark,
+                  onTap: () => context.push('/edit-profile'),
+                ),
+                Divider(height: 1, color: isDark ? Colors.white10 : Colors.black.withValues(alpha: 0.05)),
+                _buildOptionRow(
+                  context: context,
+                  icon: Icons.notifications_none_rounded,
+                  title: 'Notifications',
+                  subtitle: 'Route delays, stage alerts & notifications',
+                  isDark: isDark,
+                  onTap: () => context.push('/notifications'),
+                ),
+                Divider(height: 1, color: isDark ? Colors.white10 : Colors.black.withValues(alpha: 0.05)),
+                _buildOptionRow(
+                  context: context,
+                  icon: Icons.tune_rounded,
+                  title: 'Preferences & Settings',
+                  subtitle: 'Theme (Dark/Light), storage & security',
+                  isDark: isDark,
+                  onTap: () => context.push('/settings'),
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: AppSizes.p24),
+
+          // ── Support & About Section ─────────────────────────────────────────
+          Text(
+            'SUPPORT & ABOUT',
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.bold,
+              letterSpacing: 0.8,
+              color: isDark ? Colors.white54 : AppColors.textSecondaryLight,
+            ),
+          ),
+          const SizedBox(height: AppSizes.p8),
+          Container(
+            decoration: BoxDecoration(
+              color: cardBg,
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: cardBorder, width: 1.2),
+            ),
+            child: Column(
+              children: [
+                _buildOptionRow(
+                  context: context,
+                  icon: Icons.help_outline_rounded,
+                  title: 'Help & Matatu Stage Guide',
+                  subtitle: 'FAQs, Nairobi CBD stage guide & routes',
+                  isDark: isDark,
+                  onTap: () {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Support guide coming soon!')),
+                    );
+                  },
+                ),
+                Divider(height: 1, color: isDark ? Colors.white10 : Colors.black.withValues(alpha: 0.05)),
+                _buildOptionRow(
+                  context: context,
+                  icon: Icons.info_outline_rounded,
+                  title: 'About Routez',
+                  subtitle: 'Version 1.0.0 (Kenyan Matatu Transit)',
+                  isDark: isDark,
+                  onTap: () {
+                    showAboutDialog(
+                      context: context,
+                      applicationName: 'Routez',
+                      applicationVersion: '1.0.0',
+                      applicationIcon: const Icon(Icons.directions_bus_rounded, color: AppColors.primary),
+                      children: const [
+                        Text('Routez is Nairobi\'s smartest Matatu and transit navigation assistant.'),
+                      ],
+                    );
+                  },
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: AppSizes.p24),
+
+          // ── Logout Button ───────────────────────────────────────────────────
+          SizedBox(
+            width: double.infinity,
+            height: 52,
+            child: OutlinedButton.icon(
+              onPressed: () => _showLogoutDialog(context, ref),
+              icon: const Icon(Icons.logout_rounded, color: AppColors.error, size: 18),
+              label: const Text(
+                'Log Out',
+                style: TextStyle(
+                  color: AppColors.error,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 15,
+                ),
+              ),
+              style: OutlinedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                side: BorderSide(color: AppColors.error.withValues(alpha: 0.4), width: 1.2),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
               ),
             ),
-            error: (_, __) => Column(
-              children: [
-                Text(
-                  authUser?.displayName ?? 'Commuter',
-                  style: const TextStyle(
-                      fontSize: 24, fontWeight: FontWeight.bold),
-                ),
-                Text(
-                  authUser?.email ?? '',
-                  style: const TextStyle(color: AppColors.textSecondaryLight),
-                ),
-              ],
-            ),
-            data: (profile) {
-              final displayName = profile?.displayName ??
-                  authUser?.displayName ??
-                  'Commuter';
-              final email = profile?.email ?? authUser?.email ?? '';
-              final phone = profile?.phoneNumber ?? 'No phone added';
-
-              return Column(
-                children: [
-                  Text(
-                    displayName,
-                    style: const TextStyle(
-                        fontSize: 24, fontWeight: FontWeight.bold),
-                  ),
-                  Text(
-                    '$email  •  $phone',
-                    style: const TextStyle(color: AppColors.textSecondaryLight),
-                  ),
-                ],
-              );
-            },
           ),
 
           const SizedBox(height: AppSizes.p32),
-
-          _buildProfileOption(
-            context,
-            Icons.edit_outlined,
-            'Edit Profile',
-            'Name, photo, phone & transit mode',
-            () => context.push('/edit-profile'),
-          ),
-          _buildProfileOption(
-            context,
-            Icons.notifications_outlined,
-            'Notifications',
-            'Trip alerts, delays & fare updates',
-            () => context.push('/notifications'),
-          ),
-          _buildProfileOption(
-            context,
-            Icons.settings_outlined,
-            'Settings',
-            'Theme, security & preferences',
-            () => context.push('/settings'),
-          ),
-          _buildProfileOption(
-            context,
-            Icons.help_outline,
-            'Help & Support',
-            'FAQs, stage guide & feedback',
-            () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Support center coming soon!')),
-              );
-            },
-          ),
-          _buildProfileOption(
-            context,
-            Icons.info_outline,
-            'About Routez',
-            'Version 1.0.0 (Kenyan Transit)',
-            () {
-              showAboutDialog(
-                context: context,
-                applicationName: 'Routez',
-                applicationVersion: '1.0.0',
-                applicationIcon: const Icon(Icons.directions_bus,
-                    color: AppColors.primary),
-                children: const [
-                  Text(
-                      'Routez is Nairobi\'s smartest Matatu and transit navigation assistant.'),
-                ],
-              );
-            },
-          ),
-
-          const SizedBox(height: AppSizes.p32),
-          ElevatedButton(
-            onPressed: () => _showLogoutDialog(context, ref),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
-            ),
-            child: const Text('Logout'),
-          ),
         ],
       ),
     );
   }
 
-  Widget _buildProfileOption(
-    BuildContext context,
-    IconData icon,
-    String title,
-    String subtitle,
-    VoidCallback onTap,
-  ) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: AppSizes.p8),
-      child: ListTile(
-        leading: Icon(icon, color: AppColors.primary),
-        title: Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
-        subtitle: Text(subtitle, style: const TextStyle(fontSize: 12)),
-        trailing: const Icon(Icons.chevron_right),
-        onTap: onTap,
+  Widget _buildOptionRow({
+    required BuildContext context,
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required bool isDark,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(20),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: AppSizes.p16, vertical: AppSizes.p14),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(AppSizes.p8),
+              decoration: BoxDecoration(
+                color: (isDark ? AppColors.accent : AppColors.primary).withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                icon,
+                color: isDark ? AppColors.accent : AppColors.primary,
+                size: 20,
+              ),
+            ),
+            const SizedBox(width: AppSizes.p14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 14.5,
+                      color: isDark ? Colors.white : AppColors.textLight,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: isDark ? Colors.white54 : AppColors.textSecondaryLight,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(
+              Icons.chevron_right_rounded,
+              color: isDark ? Colors.white38 : AppColors.textSecondaryLight,
+              size: 20,
+            ),
+          ],
+        ),
       ),
     );
   }

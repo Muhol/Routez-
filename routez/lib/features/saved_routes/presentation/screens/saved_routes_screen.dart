@@ -19,23 +19,23 @@ class _SavedRoutesScreenState extends ConsumerState<SavedRoutesScreen> {
   IconData _parseIcon(String iconName) {
     switch (iconName) {
       case 'home_outlined':
-        return Icons.home_outlined;
+        return Icons.home_rounded;
       case 'work_outlined':
-        return Icons.work_outlined;
+        return Icons.work_rounded;
       case 'fitness_center_outlined':
-        return Icons.fitness_center_outlined;
+        return Icons.fitness_center_rounded;
       case 'school_outlined':
-        return Icons.school_outlined;
+        return Icons.school_rounded;
       case 'location_city_outlined':
-        return Icons.location_city_outlined;
+        return Icons.location_city_rounded;
       case 'star_outline':
-        return Icons.star_outline;
+        return Icons.star_rounded;
       case 'shopping_bag_outlined':
-        return Icons.shopping_bag_outlined;
+        return Icons.shopping_bag_rounded;
       case 'directions_bus_outlined':
-        return Icons.directions_bus_outlined;
+        return Icons.directions_bus_rounded;
       default:
-        return Icons.place_outlined;
+        return Icons.place_rounded;
     }
   }
 
@@ -57,11 +57,12 @@ class _SavedRoutesScreenState extends ConsumerState<SavedRoutesScreen> {
       context: context,
       builder: (context) {
         return AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           title: const Row(
             children: [
               Icon(Icons.edit_outlined, color: AppColors.primary),
               SizedBox(width: AppSizes.p8),
-              Text('Edit Location'),
+              Text('Edit Location', style: TextStyle(fontWeight: FontWeight.bold)),
             ],
           ),
           content: Column(
@@ -69,15 +70,17 @@ class _SavedRoutesScreenState extends ConsumerState<SavedRoutesScreen> {
             children: [
               TextField(
                 controller: titleController,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: 'Location Name',
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                 ),
               ),
               const SizedBox(height: AppSizes.p12),
               TextField(
                 controller: addressController,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: 'Stage or Address',
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                 ),
               ),
             ],
@@ -123,11 +126,12 @@ class _SavedRoutesScreenState extends ConsumerState<SavedRoutesScreen> {
       context: context,
       builder: (context) {
         return AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           title: const Row(
             children: [
               Icon(Icons.warning_amber_rounded, color: AppColors.error),
               SizedBox(width: AppSizes.p8),
-              Text('Remove Location'),
+              Text('Remove Location', style: TextStyle(fontWeight: FontWeight.bold)),
             ],
           ),
           content: Text(
@@ -155,7 +159,7 @@ class _SavedRoutesScreenState extends ConsumerState<SavedRoutesScreen> {
                   ),
                 );
               },
-              child: const Text('Remove'),
+              child: const Text('Remove', style: TextStyle(color: Colors.white)),
             ),
           ],
         );
@@ -166,106 +170,173 @@ class _SavedRoutesScreenState extends ConsumerState<SavedRoutesScreen> {
   @override
   Widget build(BuildContext context) {
     final locationsAsync = ref.watch(savedLocationsProvider);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
+      backgroundColor: isDark ? AppColors.backgroundDark : const Color(0xFFF7F9FB),
       appBar: const GlassAppBar(
-        title: Text('Saved Routes'),
+        title: Text('Saved Places'),
       ),
       floatingActionButton: Padding(
-        padding: const EdgeInsets.only(bottom: 80),
-        child: FloatingActionButton.extended(
+        padding: const EdgeInsets.only(bottom: 62),
+        child: FloatingActionButton(
           onPressed: () => context.push('/add-saved-location'),
-          backgroundColor: AppColors.primary,
+          backgroundColor: isDark ? AppColors.accent : AppColors.primary,
           foregroundColor: Colors.white,
-          icon: const Icon(Icons.add),
-          label: const Text('Add Location'),
+          elevation: 4,
+          shape: const CircleBorder(),
+          child: const Icon(Icons.add_rounded, size: 28),
         ),
       ),
       body: locationsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (err, stack) => const EmptyStateWidget(
           icon: Icons.cloud_off_outlined,
-          title: 'Could Not Load Saved Routes',
+          title: 'Could Not Load Saved Places',
           message: 'Unable to reach the database. Check your connection and try again.',
         ),
         data: (locations) {
           if (locations.isEmpty) {
             return const EmptyStateWidget(
-              icon: Icons.bookmark_border,
-              title: 'No Saved Locations',
+              icon: Icons.bookmark_border_rounded,
+              title: 'No Saved Places',
               message:
-                  'Save your favorite destinations and stages to access them quickly.',
+                  'Save your everyday spots like Home, Work, and favorite Matatu stages for fast one-tap navigation.',
             );
           }
 
           return ListView.builder(
-            padding: const EdgeInsets.fromLTRB(
+            padding: EdgeInsets.fromLTRB(
               AppSizes.p16,
+              AppSizes.p8,
               AppSizes.p16,
-              AppSizes.p16,
-              100, // Bottom padding for FAB & nav bar
+              120 + MediaQuery.of(context).padding.bottom, // Bottom padding for FAB & floating nav pills
             ),
+            physics: const BouncingScrollPhysics(),
             itemCount: locations.length,
             itemBuilder: (context, index) {
               final item = locations[index];
               final iconData = _parseIcon(item.iconName);
               final color = _parseColor(item.colorHex);
 
-              return Card(
+              return Container(
                 margin: const EdgeInsets.only(bottom: AppSizes.p12),
-                child: ListTile(
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: AppSizes.p16,
-                    vertical: AppSizes.p8,
+                decoration: BoxDecoration(
+                  color: isDark ? const Color(0xFF161C23) : Colors.white,
+                  borderRadius: BorderRadius.circular(18),
+                  border: Border.all(
+                    color: isDark ? Colors.white.withValues(alpha: 0.07) : Colors.black.withValues(alpha: 0.05),
+                    width: 1.2,
                   ),
-                  leading: Container(
-                    padding: const EdgeInsets.all(AppSizes.p12),
-                    decoration: BoxDecoration(
-                      color: color.withValues(alpha: 0.12),
-                      shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: isDark ? 0.35 : 0.04),
+                      blurRadius: 14,
+                      offset: const Offset(0, 3),
                     ),
-                    child: Icon(iconData, color: color),
-                  ),
-                  title: Text(
-                    item.name,
-                    style: const TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  subtitle: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const SizedBox(height: AppSizes.p4),
-                      Text(item.address),
-                      const SizedBox(height: AppSizes.p2),
-                      Text(
-                        item.routes,
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Theme.of(context).colorScheme.primary,
-                          fontWeight: FontWeight.w600,
-                        ),
+                  ],
+                ),
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(18),
+                    onTap: () {
+                      context.push(
+                        '/route-results',
+                        extra: {
+                          'origin': 'My Location',
+                          'destination': item.address,
+                        },
+                      );
+                    },
+                    child: Padding(
+                      padding: const EdgeInsets.all(AppSizes.p14),
+                      child: Row(
+                        children: [
+                          // Custom Icon Badge
+                          Container(
+                            padding: const EdgeInsets.all(AppSizes.p12),
+                            decoration: BoxDecoration(
+                              color: color.withValues(alpha: isDark ? 0.2 : 0.12),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(iconData, color: color, size: 22),
+                          ),
+                          const SizedBox(width: AppSizes.p14),
+
+                          // Details
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  item.name,
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 15,
+                                    color: isDark ? Colors.white : AppColors.textLight,
+                                  ),
+                                ),
+                                const SizedBox(height: 3),
+                                Text(
+                                  item.address,
+                                  style: TextStyle(
+                                    fontSize: 12.5,
+                                    color: isDark ? Colors.white54 : AppColors.textSecondaryLight,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                if (item.routes.isNotEmpty) ...[
+                                  const SizedBox(height: 6),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                    decoration: BoxDecoration(
+                                      color: (isDark ? AppColors.accent : AppColors.primary).withValues(alpha: 0.12),
+                                      borderRadius: BorderRadius.circular(AppSizes.radiusFull),
+                                    ),
+                                    child: Text(
+                                      item.routes,
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        color: isDark ? AppColors.accent : AppColors.primary,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ],
+                            ),
+                          ),
+
+                          // Action Buttons
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              IconButton(
+                                icon: Icon(
+                                  Icons.edit_outlined,
+                                  size: 18,
+                                  color: isDark ? Colors.white54 : AppColors.textSecondaryLight,
+                                ),
+                                tooltip: 'Edit',
+                                onPressed: () => _showEditDialog(item),
+                              ),
+                              IconButton(
+                                icon: const Icon(
+                                  Icons.delete_outline_rounded,
+                                  size: 18,
+                                  color: AppColors.error,
+                                ),
+                                tooltip: 'Delete',
+                                onPressed: () => _showDeleteDialog(item),
+                              ),
+                            ],
+                          ),
+                        ],
                       ),
-                    ],
+                    ),
                   ),
-                  trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      IconButton(
-                        icon: const Icon(Icons.edit_outlined, size: 20),
-                        tooltip: 'Edit location',
-                        onPressed: () => _showEditDialog(item),
-                      ),
-                      IconButton(
-                        icon: const Icon(
-                          Icons.delete_outline,
-                          size: 20,
-                          color: AppColors.error,
-                        ),
-                        tooltip: 'Delete location',
-                        onPressed: () => _showDeleteDialog(item),
-                      ),
-                    ],
-                  ),
-                  onTap: () => context.push('/route-results'),
                 ),
               );
             },

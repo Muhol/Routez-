@@ -22,31 +22,44 @@ class PrimaryButton extends StatelessWidget {
 
     return SizedBox(
       width: double.infinity,
+      height: 52,
       child: isOutlined
           ? OutlinedButton.icon(
               onPressed: effectiveOnPressed,
+              style: OutlinedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              ),
               icon: isLoading
                   ? const SizedBox(
-                      height: 20,
-                      width: 20,
+                      height: 18,
+                      width: 18,
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
                   : (icon ?? const SizedBox.shrink()),
-              label: Text(text),
+              label: Text(
+                text,
+                style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
+              ),
             )
           : ElevatedButton.icon(
               onPressed: effectiveOnPressed,
+              style: ElevatedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              ),
               icon: isLoading
                   ? const SizedBox(
-                      height: 20,
-                      width: 20,
+                      height: 18,
+                      width: 18,
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
                         color: Colors.white,
                       ),
                     )
                   : (icon ?? const SizedBox.shrink()),
-              label: Text(text),
+              label: Text(
+                text,
+                style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15),
+              ),
             ),
     );
   }

@@ -41,33 +41,35 @@ class AppTheme {
           backgroundColor: AppColors.primary,
           foregroundColor: Colors.white,
           elevation: 0,
+          minimumSize: const Size(double.infinity, 52),
           padding: const EdgeInsets.symmetric(
-            vertical: AppSizes.p16,
-            horizontal: AppSizes.p24,
+            vertical: AppSizes.p14,
+            horizontal: AppSizes.p20,
           ),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppSizes.radiusFull),
           ),
           textStyle: GoogleFonts.inter(
             fontWeight: FontWeight.w600,
-            fontSize: 16,
+            fontSize: 15.5,
           ),
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
           foregroundColor: AppColors.primary,
-          side: const BorderSide(color: AppColors.primary, width: 2),
+          side: const BorderSide(color: AppColors.primary, width: 1.5),
+          minimumSize: const Size(double.infinity, 52),
           padding: const EdgeInsets.symmetric(
-            vertical: AppSizes.p16,
-            horizontal: AppSizes.p24,
+            vertical: AppSizes.p14,
+            horizontal: AppSizes.p20,
           ),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppSizes.radiusFull),
           ),
           textStyle: GoogleFonts.inter(
             fontWeight: FontWeight.w600,
-            fontSize: 16,
+            fontSize: 15.5,
           ),
         ),
       ),
@@ -182,33 +184,35 @@ class AppTheme {
           backgroundColor: AppColors.primary,
           foregroundColor: Colors.white,
           elevation: 0,
+          minimumSize: const Size(double.infinity, 52),
           padding: const EdgeInsets.symmetric(
-            vertical: AppSizes.p16,
-            horizontal: AppSizes.p24,
+            vertical: AppSizes.p14,
+            horizontal: AppSizes.p20,
           ),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppSizes.radiusFull),
           ),
           textStyle: GoogleFonts.inter(
             fontWeight: FontWeight.w600,
-            fontSize: 16,
+            fontSize: 15.5,
           ),
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
           foregroundColor: Colors.white,
-          side: const BorderSide(color: Colors.white, width: 2),
+          side: const BorderSide(color: Colors.white, width: 1.5),
+          minimumSize: const Size(double.infinity, 52),
           padding: const EdgeInsets.symmetric(
-            vertical: AppSizes.p16,
-            horizontal: AppSizes.p24,
+            vertical: AppSizes.p14,
+            horizontal: AppSizes.p20,
           ),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppSizes.radiusFull),
           ),
           textStyle: GoogleFonts.inter(
             fontWeight: FontWeight.w600,
-            fontSize: 16,
+            fontSize: 15.5,
           ),
         ),
       ),

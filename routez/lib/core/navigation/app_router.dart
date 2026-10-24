@@ -119,6 +119,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/notifications',
         builder: (context, state) => const NotificationsScreen(),
       ),
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: '/profile',
+        builder: (context, state) => const ProfileScreen(),
+      ),
       ShellRoute(
         navigatorKey: _shellNavigatorKey,
         builder: (context, state, child) {
@@ -126,8 +131,9 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         },
         routes: [
           GoRoute(
-              path: '/home',
-              builder: (context, state) => const HomeScreen()),
+            path: '/home',
+            builder: (context, state) => const HomeScreen(),
+          ),
           GoRoute(
             path: '/saved',
             builder: (context, state) => const SavedRoutesScreen(),
@@ -135,10 +141,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/trips',
             builder: (context, state) => const TripHistoryScreen(),
-          ),
-          GoRoute(
-            path: '/profile',
-            builder: (context, state) => const ProfileScreen(),
           ),
         ],
       ),
@@ -204,6 +206,11 @@ final GoRouter appRouter = GoRouter(
       path: '/notifications',
       builder: (context, state) => const NotificationsScreen(),
     ),
+    GoRoute(
+      parentNavigatorKey: _rootNavigatorKey,
+      path: '/profile',
+      builder: (context, state) => const ProfileScreen(),
+    ),
     ShellRoute(
       navigatorKey: _shellNavigatorKey,
       builder: (context, state, child) {
@@ -218,10 +225,6 @@ final GoRouter appRouter = GoRouter(
         GoRoute(
           path: '/trips',
           builder: (context, state) => const TripHistoryScreen(),
-        ),
-        GoRoute(
-          path: '/profile',
-          builder: (context, state) => const ProfileScreen(),
         ),
       ],
     ),

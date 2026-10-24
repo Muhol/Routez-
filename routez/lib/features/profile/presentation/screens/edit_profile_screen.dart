@@ -22,7 +22,11 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   late TextEditingController _phoneController;
 
   String _selectedMode = 'Matatu';
-  final List<String> _transitModes = ['Matatu', 'Express Bus', 'Walking + Matatu'];
+  final List<Map<String, dynamic>> _transitModes = [
+    {'name': 'Matatu', 'icon': Icons.directions_bus_rounded, 'desc': 'Standard matatu routes'},
+    {'name': 'Express Bus', 'icon': Icons.departure_board_rounded, 'desc': 'Point-to-point buses'},
+    {'name': 'Walking + Matatu', 'icon': Icons.directions_walk_rounded, 'desc': 'Short walks with stages'},
+  ];
 
   bool _initialized = false;
 
@@ -91,7 +95,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
             children: [
               Icon(Icons.check_circle_outline, color: Colors.white, size: 20),
               SizedBox(width: AppSizes.p8),
-              Text('Profile details updated successfully!'),
+              Text('Profile updated successfully!'),
             ],
           ),
           backgroundColor: AppColors.success,
@@ -114,151 +118,235 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     final updateState = ref.watch(updateUserProfileControllerProvider);
     final isLoading = updateState.isLoading;
 
+    final cardBg = isDark ? const Color(0xFF161C23) : Colors.white;
+    final cardBorder = isDark ? Colors.white.withValues(alpha: 0.08) : Colors.black.withValues(alpha: 0.05);
+
     return Scaffold(
+      backgroundColor: isDark ? AppColors.backgroundDark : const Color(0xFFF7F9FB),
       appBar: const GlassAppBar(
         title: Text('Edit Profile'),
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(AppSizes.p20),
+        padding: const EdgeInsets.symmetric(horizontal: AppSizes.p20, vertical: AppSizes.p16),
+        physics: const BouncingScrollPhysics(),
         child: Form(
           key: _formKey,
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Avatar with Edit Badge
-              Stack(
-                children: [
-                  CircleAvatar(
-                    radius: 54,
-                    backgroundColor: AppColors.primary.withValues(alpha: 0.15),
-                    child: const Icon(
-                      Icons.person,
-                      size: 56,
-                      color: AppColors.primary,
-                    ),
-                  ),
-                  Positioned(
-                    bottom: 0,
-                    right: 0,
-                    child: Container(
-                      padding: const EdgeInsets.all(AppSizes.p8),
-                      decoration: const BoxDecoration(
-                        color: AppColors.accent,
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(
-                        Icons.camera_alt,
-                        color: Colors.white,
-                        size: 18,
+              Center(
+                child: Stack(
+                  children: [
+                    CircleAvatar(
+                      radius: 50,
+                      backgroundColor: (isDark ? AppColors.accent : AppColors.primary).withValues(alpha: 0.15),
+                      child: Icon(
+                        Icons.person_rounded,
+                        size: 54,
+                        color: isDark ? AppColors.accent : AppColors.primary,
                       ),
                     ),
-                  ),
-                ],
+                    Positioned(
+                      bottom: 0,
+                      right: 0,
+                      child: InkWell(
+                        onTap: () {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Avatar photo upload coming soon!'),
+                              duration: Duration(seconds: 1),
+                            ),
+                          );
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.all(AppSizes.p8),
+                          decoration: BoxDecoration(
+                            color: isDark ? AppColors.accent : AppColors.primary,
+                            shape: BoxShape.circle,
+                            border: Border.all(color: cardBg, width: 2),
+                          ),
+                          child: const Icon(
+                            Icons.camera_alt_rounded,
+                            color: Colors.white,
+                            size: 16,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: AppSizes.p24),
+
+              // ── Personal Details Section ────────────────────────────────────
+              Text(
+                'PERSONAL DETAILS',
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 0.8,
+                  color: isDark ? Colors.white54 : AppColors.textSecondaryLight,
+                ),
               ),
               const SizedBox(height: AppSizes.p8),
-              TextButton(
-                onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Avatar picker opened'),
-                      duration: Duration(seconds: 1),
+              Container(
+                padding: const EdgeInsets.all(AppSizes.p16),
+                decoration: BoxDecoration(
+                  color: cardBg,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: cardBorder, width: 1.2),
+                ),
+                child: Column(
+                  children: [
+                    TextFormField(
+                      controller: _nameController,
+                      style: TextStyle(
+                        fontSize: 14.5,
+                        color: isDark ? Colors.white : AppColors.textLight,
+                      ),
+                      decoration: InputDecoration(
+                        labelText: 'Full Name',
+                        prefixIcon: Icon(
+                          Icons.person_outline_rounded,
+                          color: isDark ? AppColors.accent : AppColors.primary,
+                        ),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+                      ),
+                      validator: (value) {
+                        if (value == null || value.trim().isEmpty) {
+                          return 'Please enter your full name';
+                        }
+                        return null;
+                      },
                     ),
-                  );
-                },
-                child: const Text('Change Photo'),
+                    const SizedBox(height: AppSizes.p16),
+                    TextFormField(
+                      controller: _phoneController,
+                      keyboardType: TextInputType.phone,
+                      style: TextStyle(
+                        fontSize: 14.5,
+                        color: isDark ? Colors.white : AppColors.textLight,
+                      ),
+                      decoration: InputDecoration(
+                        labelText: 'Phone Number',
+                        hintText: '+254 7...',
+                        prefixIcon: Icon(
+                          Icons.phone_outlined,
+                          color: isDark ? AppColors.accent : AppColors.primary,
+                        ),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+                      ),
+                    ),
+                    const SizedBox(height: AppSizes.p16),
+                    TextFormField(
+                      controller: _emailController,
+                      enabled: false,
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: isDark ? Colors.white54 : AppColors.textSecondaryLight,
+                      ),
+                      decoration: InputDecoration(
+                        labelText: 'Email Address (Verified)',
+                        prefixIcon: Icon(
+                          Icons.email_outlined,
+                          color: isDark ? Colors.white38 : AppColors.textSecondaryLight,
+                        ),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+                      ),
+                    ),
+                  ],
+                ),
               ),
+
               const SizedBox(height: AppSizes.p24),
 
-              // Form Inputs
-              Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  'Personal Details',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+              // ── Preferred Transit Mode Section ──────────────────────────────
+              Text(
+                'PREFERRED TRANSIT MODE',
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 0.8,
+                  color: isDark ? Colors.white54 : AppColors.textSecondaryLight,
                 ),
               ),
-              const SizedBox(height: AppSizes.p16),
-              TextFormField(
-                controller: _nameController,
-                decoration: const InputDecoration(
-                  labelText: 'Full Name',
-                  prefixIcon: Icon(Icons.person_outline),
-                ),
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return 'Please enter your full name';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: AppSizes.p16),
-              TextFormField(
-                controller: _emailController,
-                enabled: false, // Email managed via Auth
-                keyboardType: TextInputType.emailAddress,
-                decoration: const InputDecoration(
-                  labelText: 'Email Address (Managed via Auth)',
-                  prefixIcon: Icon(Icons.email_outlined),
-                ),
-              ),
-              const SizedBox(height: AppSizes.p16),
-              TextFormField(
-                controller: _phoneController,
-                keyboardType: TextInputType.phone,
-                decoration: const InputDecoration(
-                  labelText: 'Phone Number',
-                  prefixIcon: Icon(Icons.phone_outlined),
-                ),
-              ),
-              const SizedBox(height: AppSizes.p24),
+              const SizedBox(height: AppSizes.p8),
+              Column(
+                children: _transitModes.map((item) {
+                  final name = item['name'] as String;
+                  final icon = item['icon'] as IconData;
+                  final desc = item['desc'] as String;
+                  final isSelected = _selectedMode == name;
 
-              // Preferred Transit Mode Chips
-              Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  'Preferred Transit Mode',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
+                  return Container(
+                    margin: const EdgeInsets.only(bottom: AppSizes.p8),
+                    decoration: BoxDecoration(
+                      color: cardBg,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: isSelected
+                            ? (isDark ? AppColors.accent : AppColors.primary)
+                            : cardBorder,
+                        width: isSelected ? 1.8 : 1.0,
                       ),
-                ),
-              ),
-              const SizedBox(height: AppSizes.p12),
-              Wrap(
-                spacing: AppSizes.p8,
-                children: _transitModes.map((mode) {
-                  final isSelected = _selectedMode == mode;
-                  return ChoiceChip(
-                    label: Text(mode),
-                    selected: isSelected,
-                    selectedColor: AppColors.primary,
-                    labelStyle: TextStyle(
-                      color: isSelected
-                          ? Colors.white
-                          : isDark
-                              ? AppColors.textDark
-                              : AppColors.textLight,
-                      fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                     ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(AppSizes.radiusFull),
+                    child: ListTile(
+                      onTap: () => setState(() => _selectedMode = name),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      leading: Container(
+                        padding: const EdgeInsets.all(AppSizes.p8),
+                        decoration: BoxDecoration(
+                          color: (isSelected
+                                  ? (isDark ? AppColors.accent : AppColors.primary)
+                                  : (isDark ? Colors.white12 : Colors.black.withValues(alpha: 0.05)))
+                              .withValues(alpha: 0.15),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          icon,
+                          color: isSelected
+                              ? (isDark ? AppColors.accent : AppColors.primary)
+                              : (isDark ? Colors.white54 : AppColors.textSecondaryLight),
+                          size: 20,
+                        ),
+                      ),
+                      title: Text(
+                        name,
+                        style: TextStyle(
+                          fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                          fontSize: 14.5,
+                          color: isDark ? Colors.white : AppColors.textLight,
+                        ),
+                      ),
+                      subtitle: Text(
+                        desc,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: isDark ? Colors.white54 : AppColors.textSecondaryLight,
+                        ),
+                      ),
+                      trailing: isSelected
+                          ? Icon(
+                              Icons.check_circle_rounded,
+                              color: isDark ? AppColors.accent : AppColors.primary,
+                              size: 22,
+                            )
+                          : null,
                     ),
-                    onSelected: (selected) {
-                      if (selected) {
-                        setState(() => _selectedMode = mode);
-                      }
-                    },
                   );
                 }).toList(),
               ),
-              const SizedBox(height: AppSizes.p40),
+
+              const SizedBox(height: AppSizes.p32),
 
               PrimaryButton(
-                text: isLoading ? 'Saving Changes...' : 'Save Changes',
+                text: isLoading ? 'Saving Changes...' : 'Save Profile Changes',
                 isLoading: isLoading,
                 onPressed: isLoading ? null : () => _saveProfile(),
               ),
+
+              const SizedBox(height: AppSizes.p24),
             ],
           ),
         ),

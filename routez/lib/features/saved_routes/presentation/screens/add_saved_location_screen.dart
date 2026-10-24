@@ -21,38 +21,38 @@ class _AddSavedLocationScreenState
   final _nameController = TextEditingController();
   final _addressController = TextEditingController();
 
-  IconData _selectedIcon = Icons.place_outlined;
+  IconData _selectedIcon = Icons.home_rounded;
   Color _selectedColor = AppColors.primary;
 
   final List<IconData> _availableIcons = [
-    Icons.home_outlined,
-    Icons.work_outlined,
-    Icons.fitness_center_outlined,
-    Icons.school_outlined,
-    Icons.star_outline,
-    Icons.place_outlined,
-    Icons.shopping_bag_outlined,
-    Icons.directions_bus_outlined,
+    Icons.home_rounded,
+    Icons.work_rounded,
+    Icons.fitness_center_rounded,
+    Icons.school_rounded,
+    Icons.star_rounded,
+    Icons.place_rounded,
+    Icons.shopping_bag_rounded,
+    Icons.directions_bus_rounded,
   ];
 
   final Map<IconData, String> _iconNames = {
-    Icons.home_outlined: 'home_outlined',
-    Icons.work_outlined: 'work_outlined',
-    Icons.fitness_center_outlined: 'fitness_center_outlined',
-    Icons.school_outlined: 'school_outlined',
-    Icons.star_outline: 'star_outline',
-    Icons.place_outlined: 'place_outlined',
-    Icons.shopping_bag_outlined: 'shopping_bag_outlined',
-    Icons.directions_bus_outlined: 'directions_bus_outlined',
+    Icons.home_rounded: 'home_outlined',
+    Icons.work_rounded: 'work_outlined',
+    Icons.fitness_center_rounded: 'fitness_center_outlined',
+    Icons.school_rounded: 'school_outlined',
+    Icons.star_rounded: 'star_outline',
+    Icons.place_rounded: 'place_outlined',
+    Icons.shopping_bag_rounded: 'shopping_bag_outlined',
+    Icons.directions_bus_rounded: 'directions_bus_outlined',
   };
 
   final List<Color> _availableColors = [
-    AppColors.primary,
-    AppColors.accent,
-    AppColors.info,
-    AppColors.warning,
-    Colors.purple,
-    Colors.pink,
+    const Color(0xFF1E88E5), // Blue
+    const Color(0xFF00BFA5), // Teal
+    const Color(0xFFFF9800), // Amber
+    const Color(0xFF7C4DFF), // Purple
+    const Color(0xFFE91E63), // Pink
+    const Color(0xFF43A047), // Green
   ];
 
   @override
@@ -86,10 +86,9 @@ class _AddSavedLocationScreenState
         SnackBar(
           content: Row(
             children: [
-              const Icon(Icons.check_circle_outline,
-                  color: Colors.white, size: 20),
+              const Icon(Icons.check_circle_outline, color: Colors.white, size: 20),
               const SizedBox(width: AppSizes.p8),
-              Text('Location "$name" saved successfully!'),
+              Text('Location "$name" saved!'),
             ],
           ),
           backgroundColor: AppColors.success,
@@ -108,64 +107,182 @@ class _AddSavedLocationScreenState
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final state = ref.watch(savedLocationsControllerProvider);
     final isLoading = state.isLoading;
 
+    final cardBg = isDark ? const Color(0xFF161C23) : Colors.white;
+    final cardBorder = isDark ? Colors.white.withValues(alpha: 0.08) : Colors.black.withValues(alpha: 0.06);
+
+    final previewName = _nameController.text.trim().isNotEmpty ? _nameController.text.trim() : 'Place Name';
+    final previewAddress = _addressController.text.trim().isNotEmpty
+        ? _addressController.text.trim()
+        : 'Stage or landmark address';
+
     return Scaffold(
+      backgroundColor: isDark ? AppColors.backgroundDark : const Color(0xFFF7F9FB),
       appBar: const GlassAppBar(
-        title: Text('Add Saved Location'),
+        title: Text('Add Saved Place'),
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(AppSizes.p20),
+        padding: const EdgeInsets.symmetric(horizontal: AppSizes.p20, vertical: AppSizes.p16),
+        physics: const BouncingScrollPhysics(),
         child: Form(
           key: _formKey,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // ── Live Preview Card ───────────────────────────────────────────
               Text(
-                'Label & Details',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
+                'LIVE PREVIEW',
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 0.8,
+                  color: isDark ? Colors.white54 : AppColors.textSecondaryLight,
+                ),
+              ),
+              const SizedBox(height: AppSizes.p8),
+              Container(
+                padding: const EdgeInsets.all(AppSizes.p16),
+                decoration: BoxDecoration(
+                  color: cardBg,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: cardBorder, width: 1.2),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: isDark ? 0.35 : 0.05),
+                      blurRadius: 16,
+                      offset: const Offset(0, 4),
                     ),
-              ),
-              const SizedBox(height: AppSizes.p16),
-              TextFormField(
-                controller: _nameController,
-                decoration: const InputDecoration(
-                  labelText: 'Location Name',
-                  hintText: 'e.g. Home, Office, Gym, Campus',
-                  prefixIcon: Icon(Icons.label_outline),
+                  ],
                 ),
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return 'Please enter a location name';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: AppSizes.p16),
-              TextFormField(
-                controller: _addressController,
-                decoration: const InputDecoration(
-                  labelText: 'Stage or Address',
-                  hintText: 'e.g. Westlands Stage, Kencom, Pipeline',
-                  prefixIcon: Icon(Icons.map_outlined),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(AppSizes.p12),
+                      decoration: BoxDecoration(
+                        color: _selectedColor.withValues(alpha: isDark ? 0.22 : 0.12),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(_selectedIcon, color: _selectedColor, size: 24),
+                    ),
+                    const SizedBox(width: AppSizes.p14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            previewName,
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 15,
+                              color: isDark ? Colors.white : AppColors.textLight,
+                            ),
+                          ),
+                          const SizedBox(height: 3),
+                          Text(
+                            previewAddress,
+                            style: TextStyle(
+                              fontSize: 12.5,
+                              color: isDark ? Colors.white54 : AppColors.textSecondaryLight,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return 'Please enter the stage or address';
-                  }
-                  return null;
-                },
               ),
+
               const SizedBox(height: AppSizes.p24),
+
+              // ── Details Section ─────────────────────────────────────────────
               Text(
-                'Choose Icon',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+                'DETAILS',
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 0.8,
+                  color: isDark ? Colors.white54 : AppColors.textSecondaryLight,
+                ),
               ),
-              const SizedBox(height: AppSizes.p12),
+              const SizedBox(height: AppSizes.p8),
+              Container(
+                padding: const EdgeInsets.all(AppSizes.p16),
+                decoration: BoxDecoration(
+                  color: cardBg,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: cardBorder, width: 1.2),
+                ),
+                child: Column(
+                  children: [
+                    TextFormField(
+                      controller: _nameController,
+                      style: TextStyle(
+                        fontSize: 14.5,
+                        color: isDark ? Colors.white : AppColors.textLight,
+                      ),
+                      decoration: InputDecoration(
+                        labelText: 'Place Name',
+                        hintText: 'e.g. Home, Office, Gym, Campus',
+                        prefixIcon: Icon(
+                          Icons.label_outline_rounded,
+                          color: isDark ? AppColors.accent : AppColors.primary,
+                        ),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+                      ),
+                      onChanged: (_) => setState(() {}),
+                      validator: (value) {
+                        if (value == null || value.trim().isEmpty) {
+                          return 'Please enter a name for this place';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: AppSizes.p16),
+                    TextFormField(
+                      controller: _addressController,
+                      style: TextStyle(
+                        fontSize: 14.5,
+                        color: isDark ? Colors.white : AppColors.textLight,
+                      ),
+                      decoration: InputDecoration(
+                        labelText: 'Stage or Address',
+                        hintText: 'e.g. Westlands Stage, Kencom, Pipeline',
+                        prefixIcon: Icon(
+                          Icons.place_outlined,
+                          color: isDark ? AppColors.accent : AppColors.primary,
+                        ),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+                      ),
+                      onChanged: (_) => setState(() {}),
+                      validator: (value) {
+                        if (value == null || value.trim().isEmpty) {
+                          return 'Please enter the stage or landmark address';
+                        }
+                        return null;
+                      },
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: AppSizes.p24),
+
+              // ── Choose Icon Section ─────────────────────────────────────────
+              Text(
+                'CHOOSE ICON',
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 0.8,
+                  color: isDark ? Colors.white54 : AppColors.textSecondaryLight,
+                ),
+              ),
+              const SizedBox(height: AppSizes.p10),
               Wrap(
                 spacing: AppSizes.p12,
                 runSpacing: AppSizes.p12,
@@ -179,76 +296,79 @@ class _AddSavedLocationScreenState
                       padding: const EdgeInsets.all(AppSizes.p12),
                       decoration: BoxDecoration(
                         color: isSelected
-                            ? _selectedColor.withValues(alpha: 0.2)
-                            : Theme.of(context).colorScheme.surface,
+                            ? _selectedColor.withValues(alpha: isDark ? 0.3 : 0.15)
+                            : cardBg,
                         shape: BoxShape.circle,
                         border: Border.all(
-                          color: isSelected
-                              ? _selectedColor
-                              : AppColors.dividerLight,
+                          color: isSelected ? _selectedColor : cardBorder,
                           width: isSelected ? 2 : 1,
                         ),
                       ),
                       child: Icon(
                         icon,
-                        color: isSelected
-                            ? _selectedColor
-                            : Theme.of(context).colorScheme.onSurface,
+                        size: 22,
+                        color: isSelected ? _selectedColor : (isDark ? Colors.white70 : AppColors.textLight),
                       ),
                     ),
                   );
                 }).toList(),
               ),
+
               const SizedBox(height: AppSizes.p24),
+
+              // ── Badge Color Section ─────────────────────────────────────────
               Text(
-                'Badge Color',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+                'BADGE COLOR',
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 0.8,
+                  color: isDark ? Colors.white54 : AppColors.textSecondaryLight,
+                ),
               ),
-              const SizedBox(height: AppSizes.p12),
+              const SizedBox(height: AppSizes.p10),
               Row(
-                mainAxisAlignment: MainAxisAlignment.start,
                 children: _availableColors.map((color) {
                   final isSelected = _selectedColor == color;
                   return GestureDetector(
                     onTap: () => setState(() => _selectedColor = color),
                     child: Container(
-                      margin: const EdgeInsets.only(right: AppSizes.p12),
-                      width: 40,
-                      height: 40,
+                      margin: const EdgeInsets.only(right: AppSizes.p14),
+                      width: 38,
+                      height: 38,
                       decoration: BoxDecoration(
                         color: color,
                         shape: BoxShape.circle,
                         border: Border.all(
-                          color:
-                              isSelected ? Colors.white : Colors.transparent,
-                          width: 3,
+                          color: isSelected ? Colors.white : Colors.transparent,
+                          width: 2.5,
                         ),
                         boxShadow: isSelected
                             ? [
                                 BoxShadow(
                                   color: color.withValues(alpha: 0.5),
                                   blurRadius: 8,
-                                  spreadRadius: 2,
+                                  spreadRadius: 1,
                                 )
                               ]
-                            : [],
+                            : null,
                       ),
                       child: isSelected
-                          ? const Icon(Icons.check,
-                              color: Colors.white, size: 20)
+                          ? const Icon(Icons.check_rounded, color: Colors.white, size: 18)
                           : null,
                     ),
                   );
                 }).toList(),
               ),
-              const SizedBox(height: AppSizes.p40),
+
+              const SizedBox(height: AppSizes.p32),
+
               PrimaryButton(
-                text: isLoading ? 'Saving...' : 'Save Location',
+                text: isLoading ? 'Saving Place...' : 'Save Place',
                 isLoading: isLoading,
                 onPressed: isLoading ? null : () => _saveLocation(),
               ),
+              const SizedBox(height: AppSizes.p20),
             ],
           ),
         ),

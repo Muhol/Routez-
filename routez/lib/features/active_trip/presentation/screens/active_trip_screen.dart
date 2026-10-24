@@ -507,7 +507,7 @@ class _ActiveTripScreenState extends ConsumerState<ActiveTripScreen> {
               child: Row(
                 children: [
                   CircleAvatar(
-                    backgroundColor: Theme.of(context).colorScheme.surface,
+                    backgroundColor: isDark ? Colors.black : AppColors.primary,
                     child: IconButton.filled(
                       icon: const Icon(Icons.close),
                       onPressed: _showEndTripConfirmation,
@@ -522,7 +522,7 @@ class _ActiveTripScreenState extends ConsumerState<ActiveTripScreen> {
                         vertical: AppSizes.p12,
                       ),
                       decoration: BoxDecoration(
-                        color: AppColors.primary,
+                        color: isDark ? Colors.black : AppColors.primary,
                         borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
                         boxShadow: [
                           BoxShadow(
@@ -742,7 +742,7 @@ class _ActiveTripScreenState extends ConsumerState<ActiveTripScreen> {
                       Expanded(
                         child: PrimaryButton(
                           text: _currentStepIndex == _tripSteps.length - 1
-                              ? 'Finish Navigation'
+                              ? 'Finish Trip'
                               : 'Next Step',
                           onPressed: _nextStep,
                         ),

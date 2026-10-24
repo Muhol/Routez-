@@ -348,7 +348,13 @@ class _TripHistoryScreenState extends ConsumerState<TripHistoryScreen> {
                 final groupKeys = grouped.keys.toList();
 
                 return ListView.builder(
-                  padding: const EdgeInsets.symmetric(horizontal: AppSizes.p16),
+                  physics: const BouncingScrollPhysics(),
+                  padding: EdgeInsets.fromLTRB(
+                    AppSizes.p16,
+                    0,
+                    AppSizes.p16,
+                    110 + MediaQuery.of(context).padding.bottom,
+                  ),
                   itemCount: groupKeys.length,
                   itemBuilder: (context, groupIdx) {
                     final groupTitle = groupKeys[groupIdx];
