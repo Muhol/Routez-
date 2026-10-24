@@ -57,12 +57,14 @@ class _SavedRoutesScreenState extends ConsumerState<SavedRoutesScreen> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           title: const Row(
             children: [
               Icon(Icons.edit_outlined, color: AppColors.primary),
               SizedBox(width: AppSizes.p8),
-              Text('Edit Location', style: TextStyle(fontWeight: FontWeight.bold)),
+              Text('Edit Location',
+                  style: TextStyle(fontWeight: FontWeight.bold)),
             ],
           ),
           content: Column(
@@ -72,7 +74,8 @@ class _SavedRoutesScreenState extends ConsumerState<SavedRoutesScreen> {
                 controller: titleController,
                 decoration: InputDecoration(
                   labelText: 'Location Name',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12)),
                 ),
               ),
               const SizedBox(height: AppSizes.p12),
@@ -80,7 +83,8 @@ class _SavedRoutesScreenState extends ConsumerState<SavedRoutesScreen> {
                 controller: addressController,
                 decoration: InputDecoration(
                   labelText: 'Stage or Address',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12)),
                 ),
               ),
             ],
@@ -126,12 +130,14 @@ class _SavedRoutesScreenState extends ConsumerState<SavedRoutesScreen> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           title: const Row(
             children: [
               Icon(Icons.warning_amber_rounded, color: AppColors.error),
               SizedBox(width: AppSizes.p8),
-              Text('Remove Location', style: TextStyle(fontWeight: FontWeight.bold)),
+              Text('Remove Location',
+                  style: TextStyle(fontWeight: FontWeight.bold)),
             ],
           ),
           content: Text(
@@ -159,7 +165,8 @@ class _SavedRoutesScreenState extends ConsumerState<SavedRoutesScreen> {
                   ),
                 );
               },
-              child: const Text('Remove', style: TextStyle(color: Colors.white)),
+              child:
+                  const Text('Remove', style: TextStyle(color: Colors.white)),
             ),
           ],
         );
@@ -173,19 +180,23 @@ class _SavedRoutesScreenState extends ConsumerState<SavedRoutesScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: isDark ? AppColors.backgroundDark : const Color(0xFFF7F9FB),
+      backgroundColor:
+          isDark ? AppColors.backgroundDark : const Color(0xFFF7F9FB),
       appBar: const GlassAppBar(
         title: Text('Saved Places'),
       ),
       floatingActionButton: Padding(
-        padding: const EdgeInsets.only(bottom: 62),
-        child: FloatingActionButton(
+        padding: const EdgeInsets.only(bottom: 32),
+        child: FloatingActionButton.extended(
           onPressed: () => context.push('/add-saved-location'),
           backgroundColor: isDark ? AppColors.accent : AppColors.primary,
           foregroundColor: Colors.white,
           elevation: 4,
-          shape: const CircleBorder(),
-          child: const Icon(Icons.add_rounded, size: 28),
+          icon: const Icon(Icons.add_rounded),
+          label: const Text(
+            '',
+            style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 0.2),
+          ),
         ),
       ),
       body: locationsAsync.when(
@@ -193,7 +204,8 @@ class _SavedRoutesScreenState extends ConsumerState<SavedRoutesScreen> {
         error: (err, stack) => const EmptyStateWidget(
           icon: Icons.cloud_off_outlined,
           title: 'Could Not Load Saved Places',
-          message: 'Unable to reach the database. Check your connection and try again.',
+          message:
+              'Unable to reach the database. Check your connection and try again.',
         ),
         data: (locations) {
           if (locations.isEmpty) {
@@ -206,11 +218,11 @@ class _SavedRoutesScreenState extends ConsumerState<SavedRoutesScreen> {
           }
 
           return ListView.builder(
-            padding: EdgeInsets.fromLTRB(
+            padding: const EdgeInsets.fromLTRB(
               AppSizes.p16,
               AppSizes.p8,
               AppSizes.p16,
-              120 + MediaQuery.of(context).padding.bottom, // Bottom padding for FAB & floating nav pills
+              120, // Bottom padding for FAB & floating nav pills
             ),
             physics: const BouncingScrollPhysics(),
             itemCount: locations.length,
@@ -225,12 +237,15 @@ class _SavedRoutesScreenState extends ConsumerState<SavedRoutesScreen> {
                   color: isDark ? const Color(0xFF161C23) : Colors.white,
                   borderRadius: BorderRadius.circular(18),
                   border: Border.all(
-                    color: isDark ? Colors.white.withValues(alpha: 0.07) : Colors.black.withValues(alpha: 0.05),
+                    color: isDark
+                        ? Colors.white.withValues(alpha: 0.07)
+                        : Colors.black.withValues(alpha: 0.05),
                     width: 1.2,
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: isDark ? 0.35 : 0.04),
+                      color:
+                          Colors.black.withValues(alpha: isDark ? 0.35 : 0.04),
                       blurRadius: 14,
                       offset: const Offset(0, 3),
                     ),
@@ -257,7 +272,8 @@ class _SavedRoutesScreenState extends ConsumerState<SavedRoutesScreen> {
                           Container(
                             padding: const EdgeInsets.all(AppSizes.p12),
                             decoration: BoxDecoration(
-                              color: color.withValues(alpha: isDark ? 0.2 : 0.12),
+                              color:
+                                  color.withValues(alpha: isDark ? 0.2 : 0.12),
                               shape: BoxShape.circle,
                             ),
                             child: Icon(iconData, color: color, size: 22),
@@ -274,7 +290,9 @@ class _SavedRoutesScreenState extends ConsumerState<SavedRoutesScreen> {
                                   style: TextStyle(
                                     fontWeight: FontWeight.bold,
                                     fontSize: 15,
-                                    color: isDark ? Colors.white : AppColors.textLight,
+                                    color: isDark
+                                        ? Colors.white
+                                        : AppColors.textLight,
                                   ),
                                 ),
                                 const SizedBox(height: 3),
@@ -282,7 +300,9 @@ class _SavedRoutesScreenState extends ConsumerState<SavedRoutesScreen> {
                                   item.address,
                                   style: TextStyle(
                                     fontSize: 12.5,
-                                    color: isDark ? Colors.white54 : AppColors.textSecondaryLight,
+                                    color: isDark
+                                        ? Colors.white54
+                                        : AppColors.textSecondaryLight,
                                   ),
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
@@ -290,16 +310,23 @@ class _SavedRoutesScreenState extends ConsumerState<SavedRoutesScreen> {
                                 if (item.routes.isNotEmpty) ...[
                                   const SizedBox(height: 6),
                                   Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 8, vertical: 2),
                                     decoration: BoxDecoration(
-                                      color: (isDark ? AppColors.accent : AppColors.primary).withValues(alpha: 0.12),
-                                      borderRadius: BorderRadius.circular(AppSizes.radiusFull),
+                                      color: (isDark
+                                              ? AppColors.accent
+                                              : AppColors.primary)
+                                          .withValues(alpha: 0.12),
+                                      borderRadius: BorderRadius.circular(
+                                          AppSizes.radiusFull),
                                     ),
                                     child: Text(
                                       item.routes,
                                       style: TextStyle(
                                         fontSize: 11,
-                                        color: isDark ? AppColors.accent : AppColors.primary,
+                                        color: isDark
+                                            ? AppColors.accent
+                                            : AppColors.primary,
                                         fontWeight: FontWeight.w600,
                                       ),
                                     ),
@@ -317,7 +344,9 @@ class _SavedRoutesScreenState extends ConsumerState<SavedRoutesScreen> {
                                 icon: Icon(
                                   Icons.edit_outlined,
                                   size: 18,
-                                  color: isDark ? Colors.white54 : AppColors.textSecondaryLight,
+                                  color: isDark
+                                      ? Colors.white54
+                                      : AppColors.textSecondaryLight,
                                 ),
                                 tooltip: 'Edit',
                                 onPressed: () => _showEditDialog(item),
